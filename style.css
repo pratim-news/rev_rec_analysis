@@ -1,0 +1,131 @@
+:root {
+  --ink: #1c2430;
+  --muted: #5c6b7a;
+  --line: #e2dcd2;
+  --paper: #f6f3ee;
+  --card: #fffcf8;
+  --navy: #1f4e79;
+  --green: #0f6e56;
+  --green-bg: #e7f5f0;
+  --amber: #8a4b08;
+  --amber-bg: #fbf3e6;
+  --red: #8a2b2b;
+  --red-bg: #fdecec;
+  --blue-bg: #e8f1fa;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.55;
+}
+a { color: var(--navy); }
+header.site {
+  background: var(--navy);
+  color: white;
+  padding: 22px 0 18px;
+}
+header.site a { color: white; }
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 22px; }
+header.site h1 { margin: 0 0 6px; font-size: 1.7rem; font-weight: 650; letter-spacing: -0.02em; }
+header.site p { margin: 0; color: #d5e4f2; }
+nav.crumbs { margin-top: 14px; font-size: 0.92rem; }
+nav.crumbs a { margin-right: 16px; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.35); }
+main { padding: 28px 0 64px; }
+h2 { margin: 2.2rem 0 0.6rem; font-size: 1.35rem; letter-spacing: -0.02em; }
+h3 { margin: 1.4rem 0 0.4rem; font-size: 1.05rem; }
+p { margin: 0.6rem 0; }
+.lede { font-size: 1.12rem; }
+.card, .note, .step, .entity {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.card { padding: 16px 18px; margin: 14px 0; }
+.note { padding: 12px 16px; margin: 14px 0; }
+.note strong { display: block; margin-bottom: 4px; }
+.note.warn { background: var(--red-bg); border-color: #f0c8c8; }
+.note.ok { background: var(--green-bg); border-color: #c6e6da; }
+.note.info { background: var(--blue-bg); border-color: #c9ddef; }
+ol.flow { list-style: none; padding: 0; margin: 16px 0; counter-reset: step; }
+ol.flow li {
+  position: relative;
+  margin: 0 0 10px;
+  padding: 14px 16px 14px 64px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+ol.flow li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: white;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-right: 6px;
+}
+.tag.payg { background: var(--green-bg); color: var(--green); }
+.tag.contract { background: var(--amber-bg); color: var(--amber); }
+.tag.think { background: var(--blue-bg); color: var(--navy); }
+.tag.nca { background: #efe8fb; color: #5b3d8a; }
+.tag.jde { background: #e7eef8; color: #1f4e79; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; background: var(--card); font-size: 0.95rem; }
+th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+th { background: #efeae3; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+code, .formula {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.92em;
+}
+.formula {
+  display: block;
+  background: #1c2430;
+  color: #f4efe6;
+  padding: 12px 14px;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+.home-link {
+  display: block;
+  padding: 18px 18px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-decoration: none;
+  color: inherit;
+}
+.home-link:hover { border-color: var(--navy); }
+.home-link h2 { margin: 6px 0; }
+.home-link p { color: var(--muted); margin: 0; }
+.entity { padding: 12px 14px 8px; margin: 0 0 12px; }
+.entity h3 { margin: 4px 0 6px; }
+.entity ul { margin: 6px 0 8px 1.1rem; padding: 0; }
+.entity li { margin: 2px 0; }
+.band { margin-top: 22px; }
+footer { color: var(--muted); font-size: 0.85rem; margin-top: 36px; }
+img.figure { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: white; }
+.mermaid { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 12px; overflow-x: auto; }

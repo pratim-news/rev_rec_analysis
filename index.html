@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NCA earned revenue — current state</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <h1>NCA earned revenue</h1>
+      <p>How Think calculates the weekly amount that is passed to JDE. Current state, reconstructed from the 26 Oct 2026 procedures, the sample file, the Think 7.6 data model, and the finance charts.</p>
+    </div>
+  </header>
+  <main>
+    <div class="wrap">
+      <p class="lede">Two pages. The first is the calculation in plain language. The second is the data model those procedures actually touch.</p>
+      <div class="grid">
+        <a class="home-link" href="algorithm.html">
+          <span class="tag payg">Walkthrough</span>
+          <h2>The weekly algorithm</h2>
+          <p>Earned-to-date, the cash cap, and the amount that lands in the file. Includes a worked example, and where the print/digital split sits.</p>
+        </a>
+        <a class="home-link" href="er-diagram.html">
+          <span class="tag think">Data model</span>
+          <h2>Entity diagram</h2>
+          <p>Think order and package tables, the NCA earned-revenue tables, and the JDE account the product code maps to.</p>
+        </a>
+      </div>
+      <footer>
+        <p>Think is the current subscription and billing system. The procedures update rows that already exist. They do not, by themselves, create the JDE file. This site explains the rules. It does not publish the production script or the weekly amounts.</p>
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weekly earned-revenue algorithm</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <h1>The weekly algorithm</h1>
+      <p>What Think does before the earned-revenue file is passed to JDE.</p>
+      <nav class="crumbs">
+        <a href="index.html">Home</a>
+        <a href="er-diagram.html">Data model</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="wrap">
+
+      <h2>In one sentence</h2>
+      <p class="lede">Each run works out how much of the cash collected is earned up to a chosen date, then posts only the part that earlier runs have not already posted.</p>
+      <p>When the job runs every week, that remainder is last week's earned revenue. The cash it looks at is not limited to last week. Payments are included from a long-standing start date (the script's commented value is 30 June 2014) up to the earned date. "Last week" is produced by subtracting what was posted before.</p>
+
+      <div class="note info">
+        <strong>Money is ex-GST, and stored as a whole number.</strong>
+        Earned amount = product gross amount − product GST amount. The result is rounded to an integer. The sample file uses the same kind of integer. The script does not name dollars or cents.
+      </div>
+
+      <h2>The path of one weekly run</h2>
+      <p>The script contains eight procedures. Names start at <code>2b</code>, so an earlier step must already have inserted a row in <code>news_earned_revenue</code> for this earned date. Nothing in the script writes the file. The order below follows the procedure numbers and the comments inside them.</p>
+
+      <ol class="flow">
+        <li>
+          <span class="tag payg">PAYG</span> <span class="tag contract">Contract</span>
+          <strong>Work out earned-to-date.</strong>
+          PAYG spreads positive cash evenly across the subscription's start and expire dates. A contract earns each instalment from its due date.
+        </li>
+        <li>
+          <strong>Cap at cash collected.</strong>
+          If earned-to-date is higher than net cash (payments minus refunds, still ex-GST), cut it down to net cash. Earned revenue does not get ahead of cash.
+        </li>
+        <li>
+          <strong>Subtract what was already posted.</strong>
+          This week's number = earned-to-date − the sum of earlier earned dates for the same order line and product code.
+        </li>
+        <li>
+          <strong>Send the total by product code.</strong>
+          The file has one row per 4-character product code: date, code, amount. JDE uses that code against the chart of accounts.
+        </li>
+        <li>
+          <strong>Drop anything fully earned</strong> from the worklist <code>news_currently_earning</code>, once lifetime earned equals lifetime net cash.
+        </li>
+      </ol>
+
+      <div class="note warn">
+        <strong>Run step 3 only once per earned date.</strong>
+        It reads the amount it is about to overwrite. A second run subtracts history again. A safe repeat is step 1, then the cap, then step 3.
+      </div>
+
+      <h2>Two kinds of subscription</h2>
+      <p>The split is on the offering, not on a flag in the calculation itself.</p>
+      <div class="grid">
+        <div class="card">
+          <span class="tag payg">PAYG</span>
+          <h3>No contract on the offering</h3>
+          <p><code>news_offering.contract_offer</code> is empty, and the offering is Active. Procedures <code>2b</code>, <code>3</code>, <code>4</code>, <code>5</code>.</p>
+          <p>Think of a term that was paid up front, or as you go, without an instalment contract.</p>
+        </div>
+        <div class="card">
+          <span class="tag contract">Contract</span>
+          <h3>Offering is a contract</h3>
+          <p><code>contract_offer</code> is set, and the offering is Active. Procedures <code>2c</code>, <code>3c</code>, <code>4c</code>, <code>5c</code>.</p>
+          <p>Each payment belongs to an instalment with its own due date.</p>
+        </div>
+      </div>
+      <p>Only Active offerings are included. A subscription whose package is no longer Active is skipped by these updates.</p>
+
+      <h2>PAYG — spread cash across the term</h2>
+      <p>Take the positive payments only (refunds wait for the cap). Spread that ex-GST total evenly from the subscription start date through the expire date. Both ends count as a day.</p>
+      <div class="formula">earned to date = round( positive ex-GST cash × days so far ÷ days in the term )</div>
+      <p>Days so far = earned date − start date + 1. Days in the term = expire date − start date + 1. After the expire date the fraction can go above 100%. The cap then pulls it back to the cash collected.</p>
+
+      <h3>Illustration — not a live subscriber</h3>
+      <p>Term 1 October through 7 October. That is 7 days. The customer paid 100 ex-GST. There is no refund yet.</p>
+      <table>
+        <thead>
+          <tr><th>Earned date</th><th>Days so far</th><th>Earned to date</th><th>Already posted</th><th>This run posts</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>2 October</td><td class="num">2</td><td class="num">round(100 × 2/7) = 29</td><td class="num">0</td><td class="num">29</td></tr>
+          <tr><td>3 October</td><td class="num">3</td><td class="num">round(100 × 3/7) = 43</td><td class="num">29</td><td class="num">14</td></tr>
+          <tr><td>7 October</td><td class="num">7</td><td class="num">100</td><td class="num">prior sum</td><td class="num">whatever is left to reach 100</td></tr>
+        </tbody>
+      </table>
+      <p>The weekly number is the new cumulative minus the old cumulative. Rounding is done on the cumulative each time, so the pieces add back to the cash.</p>
+
+      <h3>A refund</h3>
+      <p>Suppose 100 was paid and 30 was refunded. Net cash is 70. At the end of the term the straight-line of the original 100 is still 100, and the cap cuts earned-to-date to 70. If earlier weeks already posted 90, this week posts 70 − 90 = −20. PAYG is allowed to post that negative. That is a reversal.</p>
+
+      <h2>Contract — earn each instalment from its due date</h2>
+      <p>Each positive payment is earned on its own, starting on the instalment due date.</p>
+      <div class="formula">days earned = earned date − due date + 1</div>
+      <ul>
+        <li>If the due date is still in the future, this instalment contributes 0.</li>
+        <li>If days earned have reached the instalment length, the whole ex-GST payment is earned.</li>
+        <li>Otherwise the payment contributes days earned ÷ instalment length.</li>
+      </ul>
+      <p>Add the instalments together, then round once.</p>
+      <p>The due date comes from the contract instalment tied to that payment. If that row is missing, the job uses the latest instalment that has any payment. If that is also missing, it uses the subscription start date.</p>
+
+      <h3>How long is an instalment?</h3>
+      <p>The package calendar unit comes from Think: 0 = days, 1 = weeks, 2 = months, 3 = years.</p>
+      <table>
+        <thead><tr><th>Package</th><th>Instalment length used</th></tr></thead>
+        <tbody>
+          <tr><td>Monthly, or a year billed in 12 instalments</td><td>Number of days in the month of the due date (28, 29, 30, or 31).</td></tr>
+          <tr><td>Days or weeks</td><td>Package length in days, divided by the number of instalments.</td></tr>
+          <tr><td>Other month or year lengths</td><td>Length measured from the day the job runs, divided by the number of instalments. It uses today's date, not the subscriber's own month.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Illustration</h3>
+      <p>An instalment of 31 ex-GST is due on 1 October, and October has 31 days. On 1 October, one day is earned: round(31 × 1/31) = 1, if it were the only instalment. On 31 October the whole 31 is earned. On 30 September nothing from this instalment is earned yet.</p>
+
+      <div class="note warn">
+        <strong>Contract reversals are cut off at zero.</strong>
+        After subtracting earlier weeks, a negative contract result is stored as 0. PAYG would have posted the negative. A contract refund can fail to reverse revenue that was already sent to JDE.
+      </div>
+
+      <h3>When the product code changes</h3>
+      <p>Contracts keep a map from the current product code to the previous one (<code>news_earned_revenue_pac_mapping</code>). Cash and earlier earnings on the old code are pulled into the new code. The old-code row is skipped when the new code already has a payment, so the same cash is not earned twice.</p>
+
+      <h2>The file JDE receives</h2>
+      <p>The sample is named <code>PCEarnRevWk_</code> plus a timestamp. Shape:</p>
+      <div class="formula">SOF,20261026060000240
+20261025,HSBS,amount
+…
+EOF,row count,total of the amounts</div>
+      <p>Every data row in that sample is earned date 25 October 2026, a Sunday. The file timestamp is Monday 26 October 2026 at 06:00:00.240. That is one file, so it shows the pattern rather than proving the standing schedule. Some amounts in the sample are negative, which matches the PAYG reversal path. The file has no subscriber id, order id, tenure, or rate plan.</p>
+
+      <h2>The 4-character code is the JDE product code</h2>
+      <p>Codes such as <code>ANAD</code> and <code>CMCW</code> are product codes. They are mapped to the JDE account string. The weekly procedures do not build that account string. They total the week's movement by the product code and stop there.</p>
+      <p>The account string has five segments. The first three are the business unit / cost centre.</p>
+      <table>
+        <thead><tr><th>Segment</th><th>What it decides</th></tr></thead>
+        <tbody>
+          <tr><td>Entity</td><td>Legal entity</td></tr>
+          <tr><td>Publication</td><td>Masthead, and print versus digital (for example The Australian digital, The Australian print, Daily Telegraph, Herald Sun)</td></tr>
+          <tr><td>Department</td><td>Team, such as editorial or marketing</td></tr>
+          <tr><td>Object account and subsidiary — digital</td><td>Consumer versus B2B, and the product: digital only, weekend bundle, 7-day bundle, education, campus, corporate, IP access</td></tr>
+          <tr><td>Object account and subsidiary — print</td><td>Channel (retail, subscriptions, alternative) and days (weekday, Saturday, Sunday)</td></tr>
+        </tbody>
+      </table>
+      <p><img class="figure" src="assets/jde-account-string.png" alt="Diagram of the JDE account string: Entity, Publication, Department, Object Account, Subsidiary. Entity, Publication and Department form the business unit."></p>
+      <p>The table that turns <code>CMCW</code> into those five segments was not in the procedures, the sample file, or the Think data model.</p>
+
+      <h2>The print / digital split is not inside this script</h2>
+      <p>Finance attributes bundle revenue to digital and print by masthead and by how the paper is delivered. Print-only subscriptions, and bundles with no email address, are 100% print and sit outside the digital closing base. A bundle that has an email address is split, and it does sit in the digital closing base.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Masthead</th><th>Code</th>
+            <th class="num">7 day / 6 day digital</th><th class="num">Print</th>
+            <th class="num">Weekend digital</th><th class="num">Print</th>
+            <th class="num">Mon–Fri digital</th><th class="num">Print</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>The Australian</td><td>TA</td><td class="num">31%</td><td class="num">69%</td><td class="num">69%</td><td class="num">31%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>Daily Telegraph</td><td>DT</td><td class="num">27%</td><td class="num">73%</td><td class="num">52%</td><td class="num">48%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>Herald Sun</td><td>HS</td><td class="num">27%</td><td class="num">73%</td><td class="num">52%</td><td class="num">48%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>Courier Mail</td><td>CM</td><td class="num">27%</td><td class="num">73%</td><td class="num">52%</td><td class="num">48%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>Adelaide Advertiser</td><td>AA</td><td class="num">27%</td><td class="num">73%</td><td class="num">52%</td><td class="num">48%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>The Cairns Post</td><td>CP</td><td class="num">27%</td><td class="num">73%</td><td class="num">52%</td><td class="num">48%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>Townsville Bulletin</td><td>TB</td><td class="num">27%</td><td class="num">73%</td><td class="num">52%</td><td class="num">48%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>Gold Coast Bulletin</td><td>GC</td><td class="num">27%</td><td class="num">73%</td><td class="num">52%</td><td class="num">48%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>The Chronicle</td><td>TC</td><td class="num">27%</td><td class="num">73%</td><td class="num">52%</td><td class="num">48%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>Geelong Advertiser</td><td>GA</td><td class="num">27%</td><td class="num">73%</td><td class="num">52%</td><td class="num">48%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>Mercury</td><td>TM</td><td class="num">27%</td><td class="num">73%</td><td class="num">54%</td><td class="num">46%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>NT News</td><td>NT</td><td class="num">28%</td><td class="num">72%</td><td class="num">56%</td><td class="num">44%</td><td class="num">36%</td><td class="num">64%</td></tr>
+          <tr><td>Weekly Times</td><td>WT</td><td class="num">46%</td><td class="num">54%</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+      <p><img class="figure" src="assets/finance-bundle-revenue-split.png" alt="Finance requirement sheet: digital closing base rules and the bundle revenue allocation percentages by masthead."></p>
+
+      <div class="note warn">
+        <strong>These percentages do not appear in the eight procedures.</strong>
+        There is no 27%, 31%, or 36% in the calculation. The job never looks at email address, delivery days, or masthead. It earns the ex-GST amount already stored on each product code.
+      </div>
+      <p>One order line is allowed to have several product codes. If a bundle has already been split into a digital amount and a print amount, this job will earn each amount on its own and never see the percentage. That is the likely place the table is used. It is not proven: the procedures that would apply the percentage were not in the script. A comment mentions an allocation-percent table, and the Think package has a "manual percent / relative percent" option, and this job reads neither of them.</p>
+      <p>The codes on the finance sheet and the codes on the weekly file are not the same list. Herald Sun (<code>HS</code>), Daily Telegraph (<code>DT</code>), Courier Mail (<code>CM</code>) and most of the regional titles appear in both. The sheet calls The Australian <code>TA</code> and the Advertiser <code>AA</code>. The weekly file has prefixes <code>AU</code> and <code>AN</code> instead, and also <code>CS</code>, <code>PU</code>, <code>RN</code>, <code>SC</code>, and <code>SN</code>, which are not on the sheet. The two-letter suffix (<code>AD</code>, <code>CW</code>, <code>DD</code>, <code>PT</code>, and the others) is not defined in these sources.</p>
+
+      <h2>What finance asked for, and what this file contains</h2>
+      <table>
+        <thead><tr><th>Finance requirement</th><th>In this weekly file?</th></tr></thead>
+        <tbody>
+          <tr><td>Revenue by product</td><td>Yes, as one amount per product code. The code is expected to carry masthead and print/digital once it is mapped to JDE.</td></tr>
+          <tr><td>Volume of subscribers, tenure, rate plan</td><td>No. There is no subscriber count and no plan attribute.</td></tr>
+          <tr><td>Print-only versus bundle-with-email versus bundle-without-email</td><td>Not as its own column. Only if that choice was already baked into the product code or the amount.</td></tr>
+          <tr><td>The masthead percentage split</td><td>Not calculated here.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Still missing from the script</h2>
+      <ul>
+        <li>The step that inserts this week's <code>news_earned_revenue</code> rows.</li>
+        <li>The step that sums by product code and writes <code>SOF</code> / <code>EOF</code>.</li>
+        <li>The product-code to JDE account crosswalk.</li>
+        <li>The program that applies the bundle percentages, if it is a program and not a package setup.</li>
+      </ul>
+
+      <footer>
+        <p>Sources: Think procedures dated 26 Oct 2026 in <code>THINK_PRD</code>; sample file <code>PCEarnRevWk_20261026060000240</code>; THINK Enterprise data model 7.6.18; JDE account-string diagram; finance bundle-split sheet. Worked numbers on this page are illustrations.</p>
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Earned-revenue data model</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <h1>Earned-revenue data model</h1>
+      <p>The tables the weekly job joins. Not the whole Think database.</p>
+      <nav class="crumbs">
+        <a href="index.html">Home</a>
+        <a href="algorithm.html">Algorithm</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="wrap">
+      <p class="lede">Three layers. Blue tables are standard Think, documented in the Enterprise 7.6.18 help file (January 2020). Purple tables are NCA extensions. The procedures use them, and the help file does not define them. The JDE account sits outside Think. The product code is mapped to it.</p>
+
+      <p>
+        <span class="tag think">Think standard</span>
+        <span class="tag nca">NCA extension</span>
+        <span class="tag jde">JDE</span>
+      </p>
+
+      <div class="note info">
+        <strong>How to read the columns.</strong>
+        Think columns below are the ones this job depends on, confirmed in the data-model help. NCA columns are the ones the procedures read or write. They are not a full table definition. Primary keys of the NCA tables are inferred from how the procedures join them.
+      </div>
+
+      <h2>Picture</h2>
+      <pre class="mermaid">
+erDiagram
+  orderhdr ||--|{ order_item : contains
+  order_item }o--|| pkg_def : package
+  order_item }o--o| subscrip : subscription
+  news_offering }o--|| pkg_def : "same package"
+  news_offering }o--o| news_instalment_plan : plan
+  order_item ||--o{ news_financial_transaction : cash
+  order_item ||--o{ news_earned_revenue : earned
+  order_item ||--o{ news_currently_earning : worklist
+  order_item ||--o| news_customer_contract : contract
+  news_customer_contract ||--|{ news_customer_contract_instalment : instalments
+  news_financial_transaction }o--o| news_customer_contract_instalment : "payment_seq"
+  pkg_def ||--o{ news_earned_revenue_pac_mapping : "old and new code"
+  news_earned_revenue }o--|| product_code : "4-character code"
+  news_financial_transaction }o--|| product_code : "4-character code"
+  product_code ||--o| jde_account_string : "mapped outside this job"
+      </pre>
+
+      <h2>How the rows connect, in words</h2>
+      <ol>
+        <li>An order header has many order items. An order item is one subscription line: start date, expire date, package, and subscription id.</li>
+        <li>The package (<code>pkg_def</code>) says whether the term is measured in days, weeks, months, or years, and how many of those units.</li>
+        <li>The NCA offering (<code>news_offering</code>) says whether that package is pay-as-you-go or a contract, and which instalment plan a contract uses.</li>
+        <li>Cash lives on <code>news_financial_transaction</code>, one row per movement, stamped with a product code, a gross amount, a GST amount, and a payment sequence.</li>
+        <li>Earned revenue is one row per order item, per product code, per earned date.</li>
+        <li>The worklist (<code>news_currently_earning</code>) holds the order items still being earned. Fully earned ones are deleted.</li>
+        <li>A contract points at the same order item and subscription, and has instalments. Each instalment has a due date and may point at a payment.</li>
+        <li>When a contract's product code changes, the mapping table records the previous code for that package.</li>
+        <li>The 4-character product code is what the weekly file groups by. A separate map, not in these tables, turns that code into the five-part JDE account.</li>
+      </ol>
+
+      <h2><span class="tag think">Think standard</span> Documented in the help file</h2>
+      <div class="band">
+        <article class="entity">
+          <h3>orderhdr</h3>
+          <p>The order. Primary key <code>orderhdr_id</code>. Also has <code>order_date</code>.</p>
+        </article>
+        <article class="entity">
+          <h3>order_item</h3>
+          <p>One subscription line on the order. Primary key <code>orderhdr_id</code> + <code>order_item_seq</code>.</p>
+          <ul>
+            <li><code>start_date</code> — start date of the subscription</li>
+            <li><code>expire_date</code> — expire (stop) date of the subscription</li>
+            <li><code>pkg_def_id</code> — which package</li>
+            <li><code>subscrip_id</code> — which subscription</li>
+            <li><code>calendar_unit</code> — 0 day, 1 week, 2 month, 3 year. The earned-revenue job reads this unit from <code>pkg_def</code>, not from the order item.</li>
+            <li><code>billing_type</code> — 0 undefined, 1 balance due, 2 installment billing. The job does not use this. It uses <code>news_offering.contract_offer</code> instead.</li>
+          </ul>
+        </article>
+        <article class="entity">
+          <h3>subscrip</h3>
+          <p>The subscription. The contract join requires <code>order_item.subscrip_id</code> to match <code>news_customer_contract.subscrip_id</code>. The help file describes <code>subscrip_id</code> as the subscription's sequential id.</p>
+        </article>
+        <article class="entity">
+          <h3>pkg_def</h3>
+          <p>Package definition. Primary key <code>pkg_def_id</code>.</p>
+          <ul>
+            <li><code>calendar_unit</code> — 0 day, 1 week, 2 month, 3 year</li>
+            <li><code>n_calendar_units</code> — how many of those units</li>
+            <li><code>revenue_percentage_option</code> — 0 manual percent, 1 relative percent. Present on the package. The earned-revenue procedures do not read it.</li>
+          </ul>
+        </article>
+        <article class="entity">
+          <h3>product</h3>
+          <p>Standard Think product (<code>product_id</code>, name in column <code>product</code>). It has no 4-character accounting code. That code is an NCA column on the financial transaction.</p>
+        </article>
+        <article class="entity">
+          <h3>installment_plan</h3>
+          <p>A standard Think table in the Order Item submodel. The job does not read it. Contracts use the NCA table <code>news_instalment_plan</code> (spelled with an s).</p>
+        </article>
+      </div>
+
+      <h2><span class="tag nca">NCA extension</span> Seen only in the procedures</h2>
+      <div class="band">
+        <article class="entity">
+          <h3>news_offering</h3>
+          <ul>
+            <li><code>pkg_def_id</code></li>
+            <li><code>contract_offer</code> — empty means PAYG; filled means contract</li>
+            <li><code>status</code> — the job keeps rows where this is Active</li>
+            <li><code>instalment_plan_id</code> — contracts only</li>
+          </ul>
+        </article>
+        <article class="entity">
+          <h3>news_instalment_plan</h3>
+          <ul>
+            <li><code>instalment_plan_id</code></li>
+            <li><code>total_instalment_count</code></li>
+          </ul>
+        </article>
+        <article class="entity">
+          <h3>news_financial_transaction</h3>
+          <p>The cash. Joined to the order item and the product code.</p>
+          <ul>
+            <li><code>orderhdr_id</code>, <code>order_item_seq</code>, <code>pkg_def_id</code></li>
+            <li><code>product_accounting_code</code></li>
+            <li><code>product_gross_amount</code>, <code>product_gst_amount</code></li>
+            <li><code>payment_seq</code> — ties a contract payment to an instalment</li>
+            <li><code>updated</code> — must fall after the historical floor and on or before the earned date</li>
+          </ul>
+        </article>
+        <article class="entity">
+          <h3>news_earned_revenue</h3>
+          <p>One amount per order item, product code, and earned date. The weekly file is these amounts, after the "subtract earlier dates" step, summed by product code.</p>
+          <ul>
+            <li><code>orderhdr_id</code>, <code>order_item_seq</code></li>
+            <li><code>product_accounting_code</code></li>
+            <li><code>earned_date</code>, <code>earned_amount</code></li>
+          </ul>
+        </article>
+        <article class="entity">
+          <h3>news_currently_earning</h3>
+          <p>Worklist of order items not yet fully earned. Same order-item and product-code identity. Deleted when earned catches up with net cash.</p>
+        </article>
+        <article class="entity">
+          <h3>news_customer_contract</h3>
+          <ul>
+            <li><code>customer_contract_id</code></li>
+            <li><code>orderhdr_id</code>, <code>order_item_seq</code>, <code>subscrip_id</code></li>
+          </ul>
+        </article>
+        <article class="entity">
+          <h3>news_customer_contract_instalment</h3>
+          <ul>
+            <li><code>customer_contract_id</code>, <code>customer_contract_instalment_seq</code></li>
+            <li><code>payment_seq</code>, <code>due_date</code></li>
+          </ul>
+        </article>
+        <article class="entity">
+          <h3>news_earned_revenue_pac_mapping</h3>
+          <p>Previous product code for a package, used when a contract's code changes.</p>
+          <ul>
+            <li><code>pkg_def_id</code></li>
+            <li><code>product_accounting_code</code> — the new code</li>
+            <li><code>prev_product_accounting_code</code></li>
+          </ul>
+        </article>
+        <article class="entity">
+          <h3>news_pkg_def_allocation and news_allocation_detail</h3>
+          <p>Named in a comment only. Not read by the calculation. The comment describes <code>pkg_def_id</code>, <code>effdt</code>, <code>allocation_id</code>, and on the detail <code>allocate_to</code> plus <code>allocation_pct</code>. This is the closest thing in the script to a revenue-split percentage, and the job does not use it.</p>
+        </article>
+      </div>
+
+      <h2><span class="tag jde">JDE</span> Outside Think</h2>
+      <article class="entity">
+        <h3>jde_account_string</h3>
+        <p>Not a table in the Think help, and not written by these procedures. The curator maps the 4-character product code onto this account.</p>
+        <ul>
+          <li>Entity — legal entity</li>
+          <li>Publication — masthead, and print versus digital</li>
+          <li>Department — team</li>
+          <li>Object account</li>
+          <li>Subsidiary — with the object, the digital product or the print channel and day</li>
+        </ul>
+        <p>Entity + Publication + Department is the business unit / cost centre.</p>
+      </article>
+      <p><img class="figure" src="assets/jde-account-string.png" alt="JDE account string diagram: Entity, Publication, Department, Object Account, Subsidiary."></p>
+
+      <div class="note ok">
+        <strong>Why this diagram is smaller than the help file.</strong>
+        The compiled help is the full THINK Enterprise model: hundreds of tables across customer, order, issue, renewal, promotion, and audit. This page keeps the earned-revenue path only. Opening <code>DataModel.chm</code> on a machine that shows a blank page: in File Explorer, open Properties and choose Unblock, then open the file again.
+      </div>
+
+      <footer>
+        <p>Think table facts are from THINK Enterprise data model 7.6.18, copyright 1997–2020 THINK Subscription. This page is a derived subset for the earned-revenue study. NCA table facts are from the 26 Oct 2026 procedures. The JDE segments are from the account-string diagram supplied with that study.</p>
+      </footer>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+  </script>
+</body>
+</html>
