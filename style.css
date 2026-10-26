@@ -129,3 +129,40 @@ code, .formula {
 footer { color: var(--muted); font-size: 0.85rem; margin-top: 36px; }
 img.figure { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: white; }
 .mermaid { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 12px; overflow-x: auto; }
+.chain { list-style: none; margin: 0; padding: 0; }
+.chain li {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 0;
+}
+.chain li + li { margin-top: 28px; position: relative; }
+.chain li + li::before {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: -22px;
+  width: 2px;
+  height: 14px;
+  background: var(--navy);
+}
+.chain li + li::after {
+  content: "";
+  position: absolute;
+  left: 24px;
+  top: -10px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid var(--navy);
+}
+.chain .pname { font-weight: 700; display: block; margin-bottom: 4px; }
+.outside {
+  border-style: dashed;
+  background: transparent;
+  color: var(--muted);
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin: 0 0 14px;
+}
+table.procs td:first-child { white-space: nowrap; font-weight: 700; }

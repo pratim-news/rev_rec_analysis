@@ -29,35 +29,122 @@
         Earned amount = product gross amount − product GST amount. The result is rounded to an integer. The sample file uses the same kind of integer. The script does not name dollars or cents.
       </div>
 
-      <h2>The path of one weekly run</h2>
-      <p>The script contains eight procedures. Names start at <code>2b</code>, so an earlier step must already have inserted a row in <code>news_earned_revenue</code> for this earned date. Nothing in the script writes the file. The order below follows the procedure numbers and the comments inside them.</p>
+      <h2>Eight procedures, and the order they run</h2>
+      <p>The script defines eight procedures and does not call them. There is no orchestrator in the file. The order below is the order they are written in the script, and it is also the order their inputs and outputs require. Pay-as-you-go and contract are separate chains. A step in one chain does not read the other chain. Down a chain, the order is fixed.</p>
 
-      <ol class="flow">
-        <li>
-          <span class="tag payg">PAYG</span> <span class="tag contract">Contract</span>
-          <strong>Work out earned-to-date.</strong>
-          PAYG spreads positive cash evenly across the subscription's start and expire dates. A contract earns each instalment from its due date.
-        </li>
-        <li>
-          <strong>Cap at cash collected.</strong>
-          If earned-to-date is higher than net cash (payments minus refunds, still ex-GST), cut it down to net cash. Earned revenue does not get ahead of cash.
-        </li>
-        <li>
-          <strong>Subtract what was already posted.</strong>
-          This week's number = earned-to-date − the sum of earlier earned dates for the same order line and product code.
-        </li>
-        <li>
-          <strong>Send the total by product code.</strong>
-          The file has one row per 4-character product code: date, code, amount. JDE uses that code against the chart of accounts.
-        </li>
-        <li>
-          <strong>Drop anything fully earned</strong> from the worklist <code>news_currently_earning</code>, once lifetime earned equals lifetime net cash.
-        </li>
-      </ol>
+      <div class="grid">
+        <div>
+          <h3><span class="tag payg">PAYG</span> chain</h3>
+          <p class="outside">Before this script: insert this earned date's rows into <code>news_earned_revenue</code>. That procedure is not in the file. The names start at 2b.</p>
+          <ol class="chain">
+            <li>
+              <span class="pname">1. news_earned_revenue_2b_update</span>
+              Set <code>earned_amount</code> to earned-to-date: positive ex-GST cash spread evenly from the subscription start date through the expire date.
+            </li>
+            <li>
+              <span class="pname">2. news_earned_revenue_3_update</span>
+              If that amount is above net cash, including refunds, cut it down to net cash.
+            </li>
+            <li>
+              <span class="pname">3. news_earned_revenue_4_update</span>
+              Replace the amount with this run's movement: earned-to-date minus everything posted on earlier earned dates. A refund can make this negative.
+            </li>
+            <li>
+              <span class="pname">4. news_currently_earning_5_delete</span>
+              Remove the worklist row when lifetime earned equals net cash since the historical start date.
+            </li>
+          </ol>
+        </div>
+        <div>
+          <h3><span class="tag contract">Contract</span> chain</h3>
+          <p class="outside">Same missing insert. Contract rows are the ones whose offering has <code>contract_offer</code> set and status Active.</p>
+          <ol class="chain">
+            <li>
+              <span class="pname">1. news_earned_revenue_2c_update</span>
+              Set <code>earned_amount</code> to earned-to-date: each positive payment earned from its instalment due date, summed, then rounded.
+            </li>
+            <li>
+              <span class="pname">2. news_earned_revenue_3c_update</span>
+              Cap at net cash on the current product code and, via the mapping, the previous product code.
+            </li>
+            <li>
+              <span class="pname">3. news_earned_revenue_4c_update</span>
+              Movement since earlier earned dates, including amounts posted on the previous product code. If the result is negative, store 0.
+            </li>
+            <li>
+              <span class="pname">4. news_currently_earning_5c_delete</span>
+              Remove the order item from the worklist when total earned, all product codes, equals total net cash.
+            </li>
+          </ol>
+        </div>
+      </div>
+      <p class="outside">After both chains: sum this earned date by product code and write the <code>SOF</code> / <code>EOF</code> file. That step is also not in the script.</p>
+
+      <div class="note info">
+        <strong>What may run at the same time.</strong>
+        <code>2b</code> and <code>2c</code> may run together. So may <code>3</code> and <code>3c</code>, <code>4</code> and <code>4c</code>, and <code>5</code> and <code>5c</code>. <code>3</code> must wait for <code>2b</code>. <code>4</code> must wait for <code>3</code>. <code>5</code> must wait for <code>4</code>. The contract chain is the same: <code>2c</code>, then <code>3c</code>, then <code>4c</code>, then <code>5c</code>. Running the file from top to bottom (2b, 2c, 3, 3c, 4, 4c, 5, 5c) satisfies both chains.
+      </div>
+
+      <h2>What each procedure does</h2>
+      <table class="procs">
+        <thead>
+          <tr><th>Order</th><th>Procedure</th><th>Population</th><th>What it does to the data</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>news_earned_revenue_2b_update<br>(@EarnedDate, @EarningStartDate)</td>
+            <td>PAYG</td>
+            <td>Overwrites <code>earned_amount</code> with the straight-line earned-to-date. Uses only payments where gross amount is positive. Ignores order items that have not started.</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>news_earned_revenue_2c_update<br>(@EarnedDate, @EarningStartDate)</td>
+            <td>Contract</td>
+            <td>Overwrites <code>earned_amount</code> with the instalment earned-to-date. Pulls in the previous product code when a mapping exists, and skips the old code if the new code already has a payment.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>news_earned_revenue_3_update<br>(@EarnedDate, @EarningStartDate)</td>
+            <td>PAYG</td>
+            <td>Caps <code>earned_amount</code> at the sum of ex-GST cash in the window, refunds included. Updates a row only when earned-to-date is greater than that sum.</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>news_earned_revenue_3c_update<br>(@EarnedDate, @EarningStartDate)</td>
+            <td>Contract</td>
+            <td>Same cap, adding cash on the previous product code to cash on the current code.</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>news_earned_revenue_4_update<br>(@EarnedDate)</td>
+            <td>PAYG</td>
+            <td>Sets <code>earned_amount</code> to itself minus the sum of <code>earned_amount</code> on earlier earned dates. This is the figure that belongs in the weekly file. It can be negative.</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>news_earned_revenue_4c_update<br>(@EarnedDate)</td>
+            <td>Contract</td>
+            <td>Same subtraction, and it also subtracts earlier amounts on the previous product code. A negative result is stored as 0.</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>news_currently_earning_5_delete<br>(@EarningStartDate)</td>
+            <td>PAYG</td>
+            <td>Deletes a <code>news_currently_earning</code> row when the sum of all its earned amounts equals net cash with <code>updated</code> on or after the historical start date.</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>news_currently_earning_5c_delete<br>(no parameters)</td>
+            <td>Contract</td>
+            <td>Deletes every worklist row for an order item when total earned across all product codes equals total net cash, with no date filter on the cash.</td>
+          </tr>
+        </tbody>
+      </table>
 
       <div class="note warn">
-        <strong>Run step 3 only once per earned date.</strong>
-        It reads the amount it is about to overwrite. A second run subtracts history again. A safe repeat is step 1, then the cap, then step 3.
+        <strong>Run <code>4</code> and <code>4c</code> only once per earned date.</strong>
+        Each one reads the amount it is about to overwrite. A second run subtracts history again. A safe repeat of a chain is the earned-to-date step, then the cap, then the movement step.
       </div>
 
       <h2>Two kinds of subscription</h2>
