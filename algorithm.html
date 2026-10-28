@@ -275,10 +275,11 @@ EOF,row count,total of the amounts</div>
       <p><img class="figure" src="assets/finance-bundle-revenue-split.png" alt="Finance requirement sheet: digital closing base rules and the bundle revenue allocation percentages by masthead."></p>
 
       <div class="note warn">
-        <strong>These percentages do not appear in the eight procedures.</strong>
-        There is no 27%, 31%, or 36% in the calculation. The job never looks at email address, delivery days, or masthead. It earns the ex-GST amount already stored on each product code.
+        <strong>The eight procedures do not read the split table.</strong>
+        The percentages live in <code>news_allocation_detail</code> (<code>allocation_id</code>, product code, percent). Each allocation adds up to 100%. The name of that table appears once in the script, inside a comment in <code>news_earned_revenue_3c_update</code>. No procedure selects it. The job earns the ex-GST amount already stored on each product code.
       </div>
-      <p>One order line is allowed to have several product codes. If a bundle has already been split into a digital amount and a print amount, this job will earn each amount on its own and never see the percentage. That is the likely place the table is used. It is not proven: the procedures that would apply the percentage were not in the script. A comment mentions an allocation-percent table, and the Think package has a "manual percent / relative percent" option, and this job reads neither of them.</p>
+      <p>The extract has 6,397 rows and 2,614 allocations. 240 allocations are 100% to one product code. 1,134 split across two codes. 1,107 split across three. Every product code on the weekly file appears in this table. Allocation 4 is <code>ANDD</code> 64% and <code>ANPP</code> 36%, the same pair as Monday–Friday on the finance sheet. Allocation 3 is <code>ANDD</code> 72.333333% and <code>ANPP</code> 27.666667%, near 73/27 and not the sheet's whole numbers. Many rows add a third code, often prefixed <code>FS</code>.</p>
+      <p>The comment also names <code>news_pkg_def_allocation</code> (<code>pkg_def_id</code>, effective date, <code>allocation_id</code>) as the link from a package to an allocation. That table is not in the extract, and the procedures do not read it either. One order line can carry several product codes, so a split already written onto those codes would pass through this job without the job seeing the percent.</p>
       <p>The codes on the finance sheet and the codes on the weekly file are not the same list. Herald Sun (<code>HS</code>), Daily Telegraph (<code>DT</code>), Courier Mail (<code>CM</code>) and most of the regional titles appear in both. The sheet calls The Australian <code>TA</code> and the Advertiser <code>AA</code>. The weekly file has prefixes <code>AU</code> and <code>AN</code> instead, and also <code>CS</code>, <code>PU</code>, <code>RN</code>, <code>SC</code>, and <code>SN</code>, which are not on the sheet. The two-letter suffix (<code>AD</code>, <code>CW</code>, <code>DD</code>, <code>PT</code>, and the others) is not defined in these sources.</p>
 
       <h2>What finance asked for, and what this file contains</h2>
@@ -288,7 +289,7 @@ EOF,row count,total of the amounts</div>
           <tr><td>Revenue by product</td><td>Yes, as one amount per product code. The code is expected to carry masthead and print/digital once it is mapped to JDE.</td></tr>
           <tr><td>Volume of subscribers, tenure, rate plan</td><td>No. There is no subscriber count and no plan attribute.</td></tr>
           <tr><td>Print-only versus bundle-with-email versus bundle-without-email</td><td>Not as its own column. Only if that choice was already baked into the product code or the amount.</td></tr>
-          <tr><td>The masthead percentage split</td><td>Not calculated here.</td></tr>
+          <tr><td>The masthead percentage split</td><td>Stored in <code>news_allocation_detail</code>. Not read by these eight procedures.</td></tr>
         </tbody>
       </table>
 
@@ -296,12 +297,12 @@ EOF,row count,total of the amounts</div>
       <ul>
         <li>The step that inserts this week's <code>news_earned_revenue</code> rows.</li>
         <li>The step that sums by product code and writes <code>SOF</code> / <code>EOF</code>.</li>
+        <li><code>news_pkg_def_allocation</code>, the link from a package and an effective date to an <code>allocation_id</code>, and the program that applies <code>allocation_pct</code> onto the cash lines.</li>
         <li>The product-code to JDE account crosswalk.</li>
-        <li>The program that applies the bundle percentages, if it is a program and not a package setup.</li>
       </ul>
 
       <footer>
-        <p>Sources: Think procedures dated 26 Oct 2026 in <code>THINK_PRD</code>; sample file <code>PCEarnRevWk_20261026060000240</code>; THINK Enterprise data model 7.6.18; JDE account-string diagram; finance bundle-split sheet. Worked numbers on this page are illustrations.</p>
+        <p>Sources: Think procedures dated 26 Oct 2026 in <code>THINK_PRD</code>; sample file <code>PCEarnRevWk_20261026060000240</code>; <code>news_allocation_detail.xlsx</code> (28 Oct 2026); THINK Enterprise data model 7.6.18; JDE account-string diagram; finance bundle-split sheet. Worked numbers on this page are illustrations.</p>
       </footer>
     </div>
   </main>

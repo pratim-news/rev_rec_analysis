@@ -172,8 +172,12 @@ erDiagram
           </ul>
         </article>
         <article class="entity">
-          <h3>news_pkg_def_allocation and news_allocation_detail</h3>
-          <p>Named in a comment only. Not read by the calculation. The comment describes <code>pkg_def_id</code>, <code>effdt</code>, <code>allocation_id</code>, and on the detail <code>allocate_to</code> plus <code>allocation_pct</code>. This is the closest thing in the script to a revenue-split percentage, and the job does not use it.</p>
+          <h3>news_allocation_detail</h3>
+          <p>The split table. Confirmed from a 6,397-row extract: <code>allocation_id</code>, <code>allocate_to</code> (product code), <code>allocation_pct</code>. Each allocation sums to 100%. Named once in the script, inside a comment in <code>news_earned_revenue_3c_update</code>. None of the eight procedures select it.</p>
+        </article>
+        <article class="entity">
+          <h3>news_pkg_def_allocation</h3>
+          <p>Named in that same comment only: <code>pkg_def_id</code>, <code>effdt</code>, <code>allocation_id</code>. This would attach an allocation to a package. It is not in the extract, and the job does not read it. The comment says the author can see the percentage breakdown and cannot see which old allocation id equals which new one.</p>
         </article>
       </div>
 
