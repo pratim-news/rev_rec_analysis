@@ -242,10 +242,94 @@ EOF,row count,total of the amounts</div>
         </tbody>
       </table>
       <p><img class="figure" src="assets/jde-account-string.png" alt="Diagram of the JDE account string: Entity, Publication, Department, Object Account, Subsidiary. Entity, Publication and Department form the business unit."></p>
-      <p>The table that turns <code>CMCW</code> into those five segments was not in the procedures, the sample file, or the Think data model.</p>
+      <p>The table that turns <code>CMCW</code> into those five segments was not in the procedures, the sample file, or the Think data model. The letters themselves can still be read from how allocations use them.</p>
+
+      <h2>How to read the 4-character code</h2>
+      <div class="note info">
+        <strong>This is a reading, not a definition from a source.</strong>
+        No file says what the letters stand for. The masthead list is the finance sheet matched to the prefixes. The product letters are whichever side of a finance percentage a suffix lands on.
+      </div>
+      <p>A code is masthead, then product family, then which side of the split. <code>CMCW</code> is Courier Mail, family <code>C</code>, weekend print.</p>
+      <table>
+        <thead><tr><th>Characters</th><th>Role</th><th>In CMCW</th></tr></thead>
+        <tbody>
+          <tr><td>1–2</td><td>Masthead, or a group bucket that is not a masthead</td><td><code>CM</code> Courier Mail</td></tr>
+          <tr><td>3</td><td>Product family. <code>C</code> and <code>X</code> are the two families that use the day pairs below. <code>D</code>, <code>P</code>, <code>V</code>, <code>I</code> are fixed products.</td><td><code>C</code></td></tr>
+          <tr><td>4</td><td>Which side of the pair, and which delivery pattern that pair belongs to</td><td><code>W</code> weekend print</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Masthead, characters 1–2</h3>
+      <table>
+        <thead><tr><th>Code</th><th>Masthead</th><th>Code on the finance sheet</th></tr></thead>
+        <tbody>
+          <tr><td>HS</td><td>Herald Sun</td><td>HS</td></tr>
+          <tr><td>DT</td><td>Daily Telegraph</td><td>DT</td></tr>
+          <tr><td>CM</td><td>Courier Mail</td><td>CM</td></tr>
+          <tr><td>GA</td><td>Geelong Advertiser</td><td>GA</td></tr>
+          <tr><td>GC</td><td>Gold Coast Bulletin</td><td>GC</td></tr>
+          <tr><td>CP</td><td>Cairns Post</td><td>CP</td></tr>
+          <tr><td>TB</td><td>Townsville Bulletin</td><td>TB</td></tr>
+          <tr><td>TC</td><td>The Chronicle</td><td>TC</td></tr>
+          <tr><td>TM</td><td>Mercury</td><td>TM</td></tr>
+          <tr><td>NT</td><td>NT News</td><td>NT</td></tr>
+          <tr><td>WT</td><td>Weekly Times</td><td>WT</td></tr>
+          <tr><td>AN</td><td>The Advertiser</td><td>AA on the sheet</td></tr>
+          <tr><td>AU</td><td>The Australian</td><td>TA on the sheet</td></tr>
+          <tr><td>FS</td><td>Group slice, not a paper. The next character is <code>D</code> and the last character picks the paper: 1 Advertiser, 2 Courier Mail, 3 Telegraph, 4 Herald Sun, 5 the <code>PN</code> prefix.</td><td>—</td></tr>
+          <tr><td>CS, PU, RN, SC, SN, PN</td><td>Same shape as a masthead. Not named on the finance sheet.</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Product pair, characters 3–4</h3>
+      <p>Where a two-code allocation uses a finance-sheet ratio, one suffix takes the digital percentage and the other takes the print percentage.</p>
+      <table>
+        <thead>
+          <tr><th>Pair</th><th>Digital side</th><th>Print side</th><th>Finance column those rates come from</th><th>Example</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>DD / PT</td><td>DD</td><td>PT</td><td>All three. DD is 27, 31, 36, or 52. PT is 73, 69, 64, or 48.</td><td><code>HSDD</code> Herald Sun digital, <code>HSPT</code> Herald Sun print</td></tr>
+          <tr><td>CD / CW</td><td>CD</td><td>CW</td><td>Weekend. 52/48, 69/31, 54/46, 56/44.</td><td><code>CMCW</code> Courier Mail, family C, weekend print</td></tr>
+          <tr><td>XD / XW</td><td>XD</td><td>XW</td><td>Same weekend rates, family X.</td><td><code>DTXW</code> Telegraph, family X, weekend print</td></tr>
+          <tr><td>CB / CS</td><td>CB</td><td>CS</td><td>7-day and Mon–Fri. 27/73, 31/69, 36/64.</td><td><code>AUCB</code> The Australian, family C, digital side</td></tr>
+          <tr><td>XB / XS</td><td>XB</td><td>XS</td><td>Same 7-day and Mon–Fri rates, family X.</td><td><code>HSXS</code> Herald Sun, family X, print side</td></tr>
+        </tbody>
+      </table>
+      <p><code>C</code> and <code>X</code> are two families of the same shape. A consumer line and a second segment fits the JDE split between consumer and B2B products. The sheet does not name them.</p>
+      <p>The second letter is the delivery shape of that side:</p>
+      <table>
+        <thead><tr><th>Letter</th><th>Reading</th></tr></thead>
+        <tbody>
+          <tr><td>D, when paired with W</td><td>Digital side of a weekend split</td></tr>
+          <tr><td>W</td><td>Weekend print</td></tr>
+          <tr><td>B</td><td>Digital side of a 7-day or Monday–Friday split</td></tr>
+          <tr><td>S</td><td>Print side of a 7-day or Monday–Friday split</td></tr>
+          <tr><td>DD as a whole suffix</td><td>Digital side of the main split, opposite PT. The letters look like “daily delivery”. The percentages put this code on the digital column.</td></tr>
+          <tr><td>PT</td><td>Print side of that main split</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Suffixes that are not that day pair</h3>
+      <table>
+        <thead><tr><th>Suffix</th><th>Reading</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>IP</td><td>IP Access</td><td>The JDE digital products name IP Access. The suffix is rare, about one code per title.</td></tr>
+          <tr><td>PP</td><td>A small slice against print, usually 1% to 11%, with PT keeping the rest</td><td>Those ratios are not 27/73. PP is not the main digital code.</td></tr>
+          <tr><td>VI with WD</td><td>WD reads as weekend delivery. VI is the other side of that pair.</td><td>The ratios look like the weekend column. Weaker than the pairs above.</td></tr>
+          <tr><td>SM</td><td>Sunday is the obvious guess.</td><td>It is a fixed token on several mastheads. Nothing in the table proves the word.</td></tr>
+          <tr><td>FSD1 … FSD5</td><td>A group amount inside the same 100% recipe, one series per paper</td><td><code>FSD4</code> is allocated with HS, <code>FSD1</code> with AN, <code>FSD2</code> with CM, <code>FSD3</code> with DT, <code>FSD5</code> with PN.</td></tr>
+        </tbody>
+      </table>
 
       <h2>The print / digital split is not inside this script</h2>
-      <p>Finance attributes bundle revenue to digital and print by masthead and by how the paper is delivered. Print-only subscriptions, and bundles with no email address, are 100% print and sit outside the digital closing base. A bundle that has an email address is split, and it does sit in the digital closing base.</p>
+      <p>Finance attributes one revenue amount. The two shares add to 100%. The weekly procedures do not apply this rule. They earn the amount already stored on each product code above.</p>
+      <ol class="flow">
+        <li><strong>Classify the product.</strong> Print only, bundle with no email address, or bundle with an email address.</li>
+        <li><strong>Print only, and bundle with no email, stop here.</strong> They stay out of the digital closing base. Revenue is 100% print and 0% digital. Email is the gate. A bundle without an email is treated as print only.</li>
+        <li><strong>A bundle with an email is in the digital closing base.</strong> Look up masthead and delivery pattern. Seven-day and six-day are one column. Monday–Friday is 36% digital / 64% print for every masthead that has the column. Weekend moves the digital share up to about half, or more. The Australian weekend pair is its 7-day pair swapped, 69% digital / 31% print. Weekly Times has only the 7-day / 6-day column, 46% / 54%.</li>
+      </ol>
+      <p>Nine mastheads share one schedule: Daily Telegraph, Herald Sun, Courier Mail, Adelaide Advertiser, Cairns Post, Townsville Bulletin, Gold Coast Bulletin, The Chronicle, and Geelong Advertiser. 7-day / 6-day is 27% digital / 73% print. Weekend is 52% / 48%. Monday–Friday is 36% / 64%. Mercury, NT News, The Australian, and Weekly Times differ, as in the table.</p>
+      <p>Tenure and rate plan are not inputs to the percentage. They are reporting cuts for subscriber counts and for revenue. The percentage uses product type, masthead, and delivery pattern.</p>
 
       <table>
         <thead>
@@ -278,9 +362,8 @@ EOF,row count,total of the amounts</div>
         <strong>The eight procedures do not read the split table.</strong>
         The percentages live in <code>news_allocation_detail</code> (<code>allocation_id</code>, product code, percent). Each allocation adds up to 100%. The name of that table appears once in the script, inside a comment in <code>news_earned_revenue_3c_update</code>. No procedure selects it. The job earns the ex-GST amount already stored on each product code.
       </div>
-      <p>The extract has 6,397 rows and 2,614 allocations. 240 allocations are 100% to one product code. 1,134 split across two codes. 1,107 split across three. Every product code on the weekly file appears in this table. Allocation 4 is <code>ANDD</code> 64% and <code>ANPP</code> 36%, the same pair as Monday–Friday on the finance sheet. Allocation 3 is <code>ANDD</code> 72.333333% and <code>ANPP</code> 27.666667%, near 73/27 and not the sheet's whole numbers. Many rows add a third code, often prefixed <code>FS</code>.</p>
+      <p>The extract has 6,397 rows and 2,614 allocations. 240 allocations are 100% to one product code. 1,134 split across two codes. 1,107 split across three. Every product code on the weekly file appears in this table. The pairs that use the finance ratios exactly are mostly <code>DD</code> with <code>PT</code>: <code>DD</code> takes 27, 31, 36, or 52, and <code>PT</code> takes the print remainder. <code>PP</code> is a different pair. Allocation 4 is <code>ANDD</code> 64 and <code>ANPP</code> 36, which only matches Monday–Friday if those two letters are reversed. Many rows add a third code prefixed <code>FS</code>.</p>
       <p>The comment also names <code>news_pkg_def_allocation</code> (<code>pkg_def_id</code>, effective date, <code>allocation_id</code>) as the link from a package to an allocation. That table is not in the extract, and the procedures do not read it either. One order line can carry several product codes, so a split already written onto those codes would pass through this job without the job seeing the percent.</p>
-      <p>The codes on the finance sheet and the codes on the weekly file are not the same list. Herald Sun (<code>HS</code>), Daily Telegraph (<code>DT</code>), Courier Mail (<code>CM</code>) and most of the regional titles appear in both. The sheet calls The Australian <code>TA</code> and the Advertiser <code>AA</code>. The weekly file has prefixes <code>AU</code> and <code>AN</code> instead, and also <code>CS</code>, <code>PU</code>, <code>RN</code>, <code>SC</code>, and <code>SN</code>, which are not on the sheet. The two-letter suffix (<code>AD</code>, <code>CW</code>, <code>DD</code>, <code>PT</code>, and the others) is not defined in these sources.</p>
 
       <h2>What finance asked for, and what this file contains</h2>
       <table>
