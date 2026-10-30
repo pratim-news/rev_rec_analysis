@@ -242,20 +242,19 @@ EOF,row count,total of the amounts</div>
         </tbody>
       </table>
       <p><img class="figure" src="assets/jde-account-string.png" alt="Diagram of the JDE account string: Entity, Publication, Department, Object Account, Subsidiary. Entity, Publication and Department form the business unit."></p>
-      <p>The table that turns <code>CMCW</code> into those five segments was not in the procedures, the sample file, or the Think data model. The letters themselves can still be read from how allocations use them.</p>
+      <p>The table that turns <code>CMCW</code> into those five segments was not in the procedures, the sample file, or the Think data model. The letters are defined in <code>news_allocate_to</code>.</p>
 
       <h2>How to read the 4-character code</h2>
       <div class="note info">
-        <strong>This is a reading, not a definition from a source.</strong>
-        No file says what the letters stand for. The masthead list is the finance sheet matched to the prefixes. The product letters are whichever side of a finance percentage a suffix lands on.
+        <strong>These meanings are the team's notes on <code>news_allocate_to</code>.</strong>
+        559 codes. All are marked active. 486 are marked earned. 73 are marked not earned. Every code on the 26 Oct 2026 weekly file is in the list and is marked earned.
       </div>
-      <p>A code is masthead, then product family, then which side of the split. <code>CMCW</code> is Courier Mail, family <code>C</code>, weekend print.</p>
+      <p>A code is brand, then product. <code>CMCW</code> is Courier Mail, PAYG, bundle, print, weekend. The letters name the bucket. They do not calculate the percent. Two packages can both use <code>CB</code> / <code>CS</code> at different rates.</p>
       <table>
         <thead><tr><th>Characters</th><th>Role</th><th>In CMCW</th></tr></thead>
         <tbody>
-          <tr><td>1–2</td><td>Masthead, or a group bucket that is not a masthead</td><td><code>CM</code> Courier Mail</td></tr>
-          <tr><td>3</td><td>Product family. <code>C</code> and <code>X</code> are the two families that use the day pairs below. <code>D</code>, <code>P</code>, <code>V</code>, <code>I</code> are fixed products.</td><td><code>C</code></td></tr>
-          <tr><td>4</td><td>Which side of the pair, and which delivery pattern that pair belongs to</td><td><code>W</code> weekend print</td></tr>
+          <tr><td>1–2</td><td>Brand. Masthead papers, plus digital brands such as Code Sports and Fox Sports</td><td><code>CM</code> Courier Mail</td></tr>
+          <tr><td>3–4</td><td>Product. Pay-as-you-go or contract, education or not, digital or print, and the day pattern</td><td><code>CW</code> PAYG bundle, print, weekend</td></tr>
         </tbody>
       </table>
 
@@ -274,52 +273,38 @@ EOF,row count,total of the amounts</div>
           <tr><td>TM</td><td>Mercury</td><td>TM</td></tr>
           <tr><td>NT</td><td>NT News</td><td>NT</td></tr>
           <tr><td>WT</td><td>Weekly Times</td><td>WT</td></tr>
-          <tr><td>AN</td><td>The Advertiser</td><td>AA on the sheet</td></tr>
-          <tr><td>AU</td><td>The Australian</td><td>TA on the sheet</td></tr>
-          <tr><td>FS</td><td>Group slice, not a paper. The next character is <code>D</code> and the last character picks the paper: 1 Advertiser, 2 Courier Mail, 3 Telegraph, 4 Herald Sun, 5 the <code>PN</code> prefix.</td><td>—</td></tr>
-          <tr><td>CS, PU, RN, SC, SN, PN</td><td>Same shape as a masthead. Not named on the finance sheet.</td><td>—</td></tr>
+          <tr><td>AN</td><td>The Advertiser / Adelaide Now</td><td>AA on the sheet. Packages are prefixed <code>AA_</code>.</td></tr>
+          <tr><td>AU</td><td>The Australian</td><td>TA on the sheet. Packages are prefixed <code>TA_</code>.</td></tr>
+          <tr><td>PN, CS, PU, RN, SC, SN</td><td>Perth Now, Code Sports, Punters, Racenet, Supercoach, Sky News</td><td>Not on the finance sheet. Mostly digital products.</td></tr>
+          <tr><td>FS</td><td>Fox Sports</td><td><code>FSD1</code> to <code>FSD5</code> are Fox Sports revenue from Advertiser, Courier Mail, Telegraph, Herald Sun, and Perth Now sales. Those five are marked not earned.</td></tr>
         </tbody>
       </table>
 
-      <h3>Product pair, characters 3–4</h3>
-      <p>Where a two-code allocation uses a finance-sheet ratio, one suffix takes the digital percentage and the other takes the print percentage.</p>
+      <h3>Product, characters 3–4</h3>
+      <p>The same pairs are used on each masthead paper. <code>C</code> is pay-as-you-go bundle. <code>X</code> is contract bundle. Education has its own pairs. Within a bundle pair, <code>B</code> or <code>D</code> is digital and <code>S</code> or <code>W</code> is print. <code>D</code> and <code>W</code> are the weekend pair. <code>B</code> and <code>S</code> are 7-day and other.</p>
       <table>
-        <thead>
-          <tr><th>Pair</th><th>Digital side</th><th>Print side</th><th>Finance column those rates come from</th><th>Example</th></tr>
-        </thead>
+        <thead><tr><th>Suffix</th><th>What the note says</th><th>Earned</th></tr></thead>
         <tbody>
-          <tr><td>DD / PT</td><td>DD</td><td>PT</td><td>All three. DD is 27, 31, 36, or 52. PT is 73, 69, 64, or 48.</td><td><code>HSDD</code> Herald Sun digital, <code>HSPT</code> Herald Sun print</td></tr>
-          <tr><td>CD / CW</td><td>CD</td><td>CW</td><td>Weekend. 52/48, 69/31, 54/46, 56/44.</td><td><code>CMCW</code> Courier Mail, family C, weekend print</td></tr>
-          <tr><td>XD / XW</td><td>XD</td><td>XW</td><td>Same weekend rates, family X.</td><td><code>DTXW</code> Telegraph, family X, weekend print</td></tr>
-          <tr><td>CB / CS</td><td>CB</td><td>CS</td><td>7-day and Mon–Fri. 27/73, 31/69, 36/64.</td><td><code>AUCB</code> The Australian, family C, digital side</td></tr>
-          <tr><td>XB / XS</td><td>XB</td><td>XS</td><td>Same 7-day and Mon–Fri rates, family X.</td><td><code>HSXS</code> Herald Sun, family X, print side</td></tr>
+          <tr><td>CB / CS</td><td>PAYG bundle, digital then print, 7-day and other</td><td>Yes</td></tr>
+          <tr><td>CD / CW</td><td>PAYG bundle, digital then print, weekend</td><td>Yes</td></tr>
+          <tr><td>XB / XS</td><td>Contract bundle, digital then print, 7-day and other</td><td>Yes</td></tr>
+          <tr><td>XD / XW</td><td>Contract bundle, digital then print, weekend</td><td>Yes</td></tr>
+          <tr><td>BB / BS, BD / BW</td><td>PAYG education bundle. Same digital/print split, 7-day then weekend</td><td>Yes</td></tr>
+          <tr><td>YB / YS, YD / YW</td><td>Contract education bundle. Same shape</td><td>Yes</td></tr>
+          <tr><td>AD, AS / AW</td><td>PAYG education, not a bundle: digital only, print 7-day, print weekend</td><td>Yes</td></tr>
+          <tr><td>ZD, ZS / ZW</td><td>Contract education, not a bundle: digital only, print 7-day, print weekend</td><td>Yes</td></tr>
+          <tr><td>DS / DW</td><td>PAYG print only, 7-day and other / weekend</td><td>Yes</td></tr>
+          <tr><td>WD, WS / WW</td><td>Contract: digital only, print 7-day, print weekend</td><td>Yes</td></tr>
+          <tr><td>DD</td><td>{brand} Digital. A digital-only product, not one side of the bundle split</td><td>Yes, except Tips and <code>FSDD</code></td></tr>
+          <tr><td>DC, CP, IP, SM</td><td>Corporate digital, digital campus (B2B), digital IP (B2B), digital SMB (B2B)</td><td>Yes</td></tr>
+          <tr><td>PT, ET</td><td>Print top-up, early termination fee</td><td>Yes</td></tr>
+          <tr><td>PP, PC, OP, VI, RW</td><td>Print, corporate print, other product, value item, rewards</td><td>No</td></tr>
         </tbody>
       </table>
-      <p><code>C</code> and <code>X</code> are two families of the same shape. A consumer line and a second segment fits the JDE split between consumer and B2B products. The sheet does not name them.</p>
-      <p>The second letter is the delivery shape of that side:</p>
-      <table>
-        <thead><tr><th>Letter</th><th>Reading</th></tr></thead>
-        <tbody>
-          <tr><td>D, when paired with W</td><td>Digital side of a weekend split</td></tr>
-          <tr><td>W</td><td>Weekend print</td></tr>
-          <tr><td>B</td><td>Digital side of a 7-day or Monday–Friday split</td></tr>
-          <tr><td>S</td><td>Print side of a 7-day or Monday–Friday split</td></tr>
-          <tr><td>DD as a whole suffix</td><td>Digital side of the main split, opposite PT. The letters look like “daily delivery”. The percentages put this code on the digital column.</td></tr>
-          <tr><td>PT</td><td>Print side of that main split</td></tr>
-        </tbody>
-      </table>
-
-      <h3>Suffixes that are not that day pair</h3>
-      <table>
-        <thead><tr><th>Suffix</th><th>Reading</th><th>Why</th></tr></thead>
-        <tbody>
-          <tr><td>IP</td><td>IP Access</td><td>The JDE digital products name IP Access. The suffix is rare, about one code per title.</td></tr>
-          <tr><td>PP</td><td>A small slice against print, usually 1% to 11%, with PT keeping the rest</td><td>Those ratios are not 27/73. PP is not the main digital code.</td></tr>
-          <tr><td>VI with WD</td><td>WD reads as weekend delivery. VI is the other side of that pair.</td><td>The ratios look like the weekend column. Weaker than the pairs above.</td></tr>
-          <tr><td>SM</td><td>Sunday is the obvious guess.</td><td>It is a fixed token on several mastheads. Nothing in the table proves the word.</td></tr>
-          <tr><td>FSD1 … FSD5</td><td>A group amount inside the same 100% recipe, one series per paper</td><td><code>FSD4</code> is allocated with HS, <code>FSD1</code> with AN, <code>FSD2</code> with CM, <code>FSD3</code> with DT, <code>FSD5</code> with PN.</td></tr>
-        </tbody>
-      </table>
+      <div class="note warn">
+        <strong><code>DD</code> / <code>PT</code> is not the finance pair.</strong>
+        An earlier reading of the allocation rows treated <code>DD</code> as the digital share and <code>PT</code> as the print share. The notes say <code>DD</code> is "{brand} Digital" and <code>PT</code> is print top-up. On current packages those two suffixes are paired 9 times. The pairs that carry the finance-like rates are <code>CB</code>/<code>CS</code> and <code>CD</code>/<code>CW</code>.
+      </div>
 
       <h2>The print / digital split is not inside this script</h2>
       <p>Finance attributes one revenue amount. The two shares add to 100%. The weekly procedures do not apply this rule. They earn the amount already stored on each product code above.</p>
@@ -359,11 +344,13 @@ EOF,row count,total of the amounts</div>
       <p><img class="figure" src="assets/finance-bundle-revenue-split.png" alt="Finance requirement sheet: digital closing base rules and the bundle revenue allocation percentages by masthead."></p>
 
       <div class="note warn">
-        <strong>The eight procedures do not read the split table.</strong>
-        The percentages live in <code>news_allocation_detail</code> (<code>allocation_id</code>, product code, percent). Each allocation adds up to 100%. The name of that table appears once in the script, inside a comment in <code>news_earned_revenue_3c_update</code>. No procedure selects it. The job earns the ex-GST amount already stored on each product code.
+        <strong>The eight procedures do not read this chain.</strong>
+        The package points at a recipe. The recipe holds the percents. The weekly job earns the ex-GST amount already stored on each product code.
       </div>
-      <p>The extract has 6,397 rows and 2,614 allocations. 240 allocations are 100% to one product code. 1,134 split across two codes. 1,107 split across three. Every product code on the weekly file appears in this table. The pairs that use the finance ratios exactly are mostly <code>DD</code> with <code>PT</code>: <code>DD</code> takes 27, 31, 36, or 52, and <code>PT</code> takes the print remainder. <code>PP</code> is a different pair. Allocation 4 is <code>ANDD</code> 64 and <code>ANPP</code> 36, which only matches Monday–Friday if those two letters are reversed. Many rows add a third code prefixed <code>FS</code>.</p>
-      <p>The comment also names <code>news_pkg_def_allocation</code> (<code>pkg_def_id</code>, effective date, <code>allocation_id</code>) as the link from a package to an allocation. That table is not in the extract, and the procedures do not read it either. One order line can carry several product codes, so a split already written onto those codes would pass through this job without the job seeing the percent.</p>
+      <p>The link is <code>pkg_def</code> to <code>news_pkg_def_allocation</code> (<code>pkg_def_id</code>, effective date, <code>allocation_id</code>), keeping the latest effective date for that package. <code>news_allocation</code> is the header (description and status). <code>news_allocation_detail</code> is the lines (product code and percent). <code>news_allocate_to</code> is the code list above. The script names the detail table once, inside a comment in <code>news_earned_revenue_3c_update</code>. No procedure selects it.</p>
+      <p>Of 11,018 packages, 10,283 have a current allocation and 735 do not. Registration, staff access, trials, and free passes are among those with none. The 10,283 packages share 630 allocation ids. 10,212 of the links are Active and 71 are Inactive. 5,284 current allocations are one product code, 4,873 are two, and 126 are three.</p>
+      <p>The rates on those current packages are close to the finance sheet and are not the sheet's whole numbers. The largest groups are <code>CD</code> 51.85 / <code>CW</code> 48.15 and <code>CB</code> 26.92 / <code>CS</code> 73.08. The Australian weekend digital pass is <code>AUCD</code> 68.965517% and <code>AUCW</code> 31.034483% (allocation 2370, effective 1 Jul 2025), against the sheet's 69 / 31. The Australian 6-day pass is <code>AUCB</code> 31.25% and <code>AUCS</code> 68.75%. Weekend plus Monday uses the same <code>CB</code> / <code>CS</code> suffixes at 55.555556 / 44.444444, and that pattern is not a column on the sheet.</p>
+      <p>The query keeps the latest effective date only. It does not say which older allocation a package used before that date. That is the gap the procedure comment already named. One order line can carry several product codes, so a split already written onto those codes passes through this job without the job seeing the percent.</p>
 
       <h2>What finance asked for, and what this file contains</h2>
       <table>
@@ -372,7 +359,7 @@ EOF,row count,total of the amounts</div>
           <tr><td>Revenue by product</td><td>Yes, as one amount per product code. The code is expected to carry masthead and print/digital once it is mapped to JDE.</td></tr>
           <tr><td>Volume of subscribers, tenure, rate plan</td><td>No. There is no subscriber count and no plan attribute.</td></tr>
           <tr><td>Print-only versus bundle-with-email versus bundle-without-email</td><td>Not as its own column. Only if that choice was already baked into the product code or the amount.</td></tr>
-          <tr><td>The masthead percentage split</td><td>Stored in <code>news_allocation_detail</code>. Not read by these eight procedures.</td></tr>
+          <tr><td>The masthead percentage split</td><td>Stored on the package's current allocation. Not read by these eight procedures. Live percents are more precise than the sheet, and weekend-plus-one-weekday is an extra pattern.</td></tr>
         </tbody>
       </table>
 
@@ -380,12 +367,12 @@ EOF,row count,total of the amounts</div>
       <ul>
         <li>The step that inserts this week's <code>news_earned_revenue</code> rows.</li>
         <li>The step that sums by product code and writes <code>SOF</code> / <code>EOF</code>.</li>
-        <li><code>news_pkg_def_allocation</code>, the link from a package and an effective date to an <code>allocation_id</code>, and the program that applies <code>allocation_pct</code> onto the cash lines.</li>
+        <li>The program that applies <code>allocation_pct</code> onto the cash lines. The package link itself is now known, and it keeps only the latest effective date.</li>
         <li>The product-code to JDE account crosswalk.</li>
       </ul>
 
       <footer>
-        <p>Sources: Think procedures dated 26 Oct 2026 in <code>THINK_PRD</code>; sample file <code>PCEarnRevWk_20261026060000240</code>; <code>news_allocation_detail.xlsx</code> (28 Oct 2026); THINK Enterprise data model 7.6.18; JDE account-string diagram; finance bundle-split sheet. Worked numbers on this page are illustrations.</p>
+        <p>Sources: Think procedures dated 26 Oct 2026 in <code>THINK_PRD</code>; sample file <code>PCEarnRevWk_20261026060000240</code>; <code>news_allocation_detail.xlsx</code> (28 Oct 2026); <code>Allocations.xlsx</code> (package link and code notes); THINK Enterprise data model 7.6.18; JDE account-string diagram; finance bundle-split sheet. Worked numbers on this page are illustrations, except the allocation percents, which are the stored recipes.</p>
       </footer>
     </div>
   </main>

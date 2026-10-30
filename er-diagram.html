@@ -19,7 +19,7 @@
   </header>
   <main>
     <div class="wrap">
-      <p class="lede">Three layers. Blue tables are standard Think, documented in the Enterprise 7.6.18 help file (January 2020). Purple tables are NCA extensions. The procedures use them, and the help file does not define them. The JDE account sits outside Think. The product code is mapped to it.</p>
+      <p class="lede">Three layers. Blue tables are standard Think, documented in the Enterprise 7.6.18 help file (January 2020). Purple tables are NCA extensions. The weekly procedures use most of them, and the help file does not define them. The allocation tables are the exception: they name the product code and the split, and the weekly job does not join them. The JDE account sits outside Think.</p>
 
       <p>
         <span class="tag think">Think standard</span>
@@ -47,6 +47,10 @@ erDiagram
   news_customer_contract ||--|{ news_customer_contract_instalment : instalments
   news_financial_transaction }o--o| news_customer_contract_instalment : "payment_seq"
   pkg_def ||--o{ news_earned_revenue_pac_mapping : "old and new code"
+  pkg_def ||--o{ news_pkg_def_allocation : "latest effective date"
+  news_allocation ||--o{ news_pkg_def_allocation : header
+  news_allocation ||--|{ news_allocation_detail : percents
+  news_allocate_to ||--o{ news_allocation_detail : "code notes"
   news_earned_revenue }o--|| product_code : "4-character code"
   news_financial_transaction }o--|| product_code : "4-character code"
   product_code ||--o| jde_account_string : "mapped outside this job"
@@ -62,7 +66,8 @@ erDiagram
         <li>The worklist (<code>news_currently_earning</code>) holds the order items still being earned. Fully earned ones are deleted.</li>
         <li>A contract points at the same order item and subscription, and has instalments. Each instalment has a due date and may point at a payment.</li>
         <li>When a contract's product code changes, the mapping table records the previous code for that package.</li>
-        <li>The 4-character product code is what the weekly file groups by. A separate map, not in these tables, turns that code into the five-part JDE account.</li>
+        <li>The 4-character product code is what the weekly file groups by. <code>news_allocate_to</code> is the code list. A separate map, not in these tables, turns that code into the five-part JDE account.</li>
+        <li>A package's current split is the latest <code>news_pkg_def_allocation</code> row, pointing at one <code>news_allocation</code>, whose lines are <code>news_allocation_detail</code>. The weekly procedures do not join this chain.</li>
       </ol>
 
       <h2><span class="tag think">Think standard</span> Documented in the help file</h2>
@@ -172,12 +177,20 @@ erDiagram
           </ul>
         </article>
         <article class="entity">
-          <h3>news_allocation_detail</h3>
-          <p>The split table. Confirmed from a 6,397-row extract: <code>allocation_id</code>, <code>allocate_to</code> (product code), <code>allocation_pct</code>. Each allocation sums to 100%. Named once in the script, inside a comment in <code>news_earned_revenue_3c_update</code>. None of the eight procedures select it.</p>
+          <h3>news_pkg_def_allocation</h3>
+          <p>Attaches one allocation to a package. Confirmed columns: <code>pkg_def_id</code>, <code>effdt</code>, <code>allocation_id</code>. The extract keeps the latest effective date per package and has no as-of date. The weekly job does not read it. The procedure comment says the author can see the breakdown and cannot see which old allocation id equals which new one.</p>
         </article>
         <article class="entity">
-          <h3>news_pkg_def_allocation</h3>
-          <p>Named in that same comment only: <code>pkg_def_id</code>, <code>effdt</code>, <code>allocation_id</code>. This would attach an allocation to a package. It is not in the extract, and the job does not read it. The comment says the author can see the percentage breakdown and cannot see which old allocation id equals which new one.</p>
+          <h3>news_allocation</h3>
+          <p>Header of one recipe. <code>allocation_id</code>, description, and status (Active or Inactive). Many packages share one id.</p>
+        </article>
+        <article class="entity">
+          <h3>news_allocation_detail</h3>
+          <p>The percent lines. <code>allocation_id</code>, <code>allocate_to</code> (product code), <code>allocation_pct</code>. Each allocation sums to 100%. Named once in the script, inside a comment in <code>news_earned_revenue_3c_update</code>. None of the eight procedures select it.</p>
+        </article>
+        <article class="entity">
+          <h3>news_allocate_to</h3>
+          <p>The product-code dictionary. <code>allocate_to</code>, <code>active</code>, <code>earned</code>, and a notes column that names the brand and the product. 559 codes. 73 are marked not earned.</p>
         </article>
       </div>
 
@@ -202,7 +215,7 @@ erDiagram
       </div>
 
       <footer>
-        <p>Think table facts are from THINK Enterprise data model 7.6.18, copyright 1997–2020 THINK Subscription. This page is a derived subset for the earned-revenue study. NCA table facts are from the 26 Oct 2026 procedures. The JDE segments are from the account-string diagram supplied with that study.</p>
+        <p>Think table facts are from THINK Enterprise data model 7.6.18, copyright 1997–2020 THINK Subscription. This page is a derived subset for the earned-revenue study. NCA table facts are from the 26 Oct 2026 procedures, except the allocation tables, which are from the package-allocation workbook. The JDE segments are from the account-string diagram supplied with that study.</p>
       </footer>
     </div>
   </main>
