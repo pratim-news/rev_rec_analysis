@@ -24,6 +24,30 @@
       <p class="lede">Each run works out how much of the cash collected is earned up to a chosen date, then posts only the part that earlier runs have not already posted.</p>
       <p>When the job runs every week, that remainder is last week's earned revenue. The cash it looks at is not limited to last week. Payments are included from a long-standing start date (the script's commented value is 30 June 2014) up to the earned date. "Last week" is produced by subtracting what was posted before.</p>
 
+      <h2>The flow</h2>
+      <p>Pay-as-you-go and contract split at the offering, then do the same three things: earned-to-date, a cash cap, then only the new movement. The print/digital split is not a box in this picture. The same stage of each chain may run together. Down a chain, the order is fixed.</p>
+      <pre class="mermaid">
+flowchart TD
+  rows["Rows for this earned date already exist"]
+  split{"contract_offer set?"}
+  p1["2b Straight line\npositive ex-GST cash times days over the term\nround to an integer"]
+  c1["2c From the due date\neach positive instalment\nsum, then round once"]
+  p2["3 Cap at net cash\nonly when earned-to-date is higher\nrefunds included"]
+  c2["3c Cap at net cash\ncurrent code plus previous code"]
+  p3["4 This week\nearned-to-date minus earlier dates\nmay be negative"]
+  c3["4c This week\nincludes the previous code\nnegative stored as 0"]
+  p4["5 Drop the worklist row\nwhen this code has caught the cash"]
+  c4["5c Drop the order item\nwhen all codes have caught the cash"]
+  file["Sum this earned date by product code\nwrite the file"]
+
+  rows --> split
+  split -->|No| p1
+  split -->|Yes| c1
+  p1 --> p2 --> p3 --> p4 --> file
+  c1 --> c2 --> c3 --> c4 --> file
+      </pre>
+      <p class="outside">The insert of those earned-date rows, and the file writer, are not among the eight procedures. Steps 5 and 5c do not change the amount that goes to the file.</p>
+
       <div class="note info">
         <strong>Money is ex-GST, and stored as a whole number.</strong>
         Earned amount = product gross amount − product GST amount. The result is rounded to an integer. The sample file uses the same kind of integer. The script does not name dollars or cents.
@@ -376,5 +400,9 @@ EOF,row count,total of the amounts</div>
       </footer>
     </div>
   </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose", flowchart: { htmlLabels: true, curve: "basis" } });
+  </script>
 </body>
 </html>
