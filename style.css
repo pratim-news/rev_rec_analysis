@@ -166,3 +166,86 @@ img.figure { max-width: 100%; height: auto; border: 1px solid var(--line); borde
   margin: 0 0 14px;
 }
 table.procs td:first-child { white-space: nowrap; font-weight: 700; }
+.home-link.lead { grid-column: 1 / -1; }
+ol.story {
+  list-style: none;
+  margin: 18px 0 8px;
+  padding: 0;
+  counter-reset: story;
+}
+ol.story > li {
+  position: relative;
+  margin: 0;
+  padding: 0 0 8px 54px;
+}
+ol.story > li::before {
+  counter-increment: story;
+  content: counter(story);
+  position: absolute;
+  left: 0;
+  top: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: white;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+ol.story > li::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 50px;
+  bottom: 0;
+  width: 2px;
+  background: var(--navy);
+}
+ol.story > li:last-child::after { display: none; }
+.station {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px 12px;
+}
+.station h3 { margin: 4px 0 8px; }
+.station p:first-of-type { margin-top: 0; }
+.join {
+  display: inline-block;
+  margin: 12px 0 18px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+.chips { margin: 8px 0 0; }
+.chip {
+  display: inline-block;
+  margin: 4px 6px 0 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--blue-bg);
+  color: var(--navy);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.92rem;
+}
+.chip em { font-style: normal; font-family: "Segoe UI", system-ui, sans-serif; color: var(--muted); font-size: 0.85rem; }
+.split-bar {
+  display: flex;
+  height: 28px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 10px 0 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: white;
+}
+.split-bar span { display: block; }
+.split-bar .digital { width: 68.97%; background: var(--navy); }
+.split-bar .print { width: 31.03%; background: var(--green); }
+.split-caption { margin: 0 0 8px; color: var(--muted); font-size: 0.85rem; }

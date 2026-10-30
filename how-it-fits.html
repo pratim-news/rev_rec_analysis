@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How earned revenue fits together</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <h1>How the pieces fit</h1>
+      <p>One package, followed from the split recipe to the weekly file JDE receives.</p>
+      <nav class="crumbs">
+        <a href="index.html">Home</a>
+        <a href="algorithm.html">Algorithm</a>
+        <a href="er-diagram.html">Data model</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="wrap">
+      <p class="lede">The product code is the joint. A package is given a recipe that names two or more codes and a percent for each. Cash is stored on those codes. The weekly job never reads the percent. It earns whatever cash is already sitting on each code, and the file adds every subscriber’s movement into one integer per code.</p>
+
+      <div class="note info">
+        <strong>The example is a real recipe, not a real subscriber.</strong>
+        Package <code>TA_TADS450G_W04</code>, “The Australian Digital Pass &amp; Weekend Paper Delivery”, uses allocation 2370 from 1 July 2025. The percents below are that recipe. No customer’s cash is shown.
+      </div>
+
+      <ol class="story">
+        <li>
+          <article class="station">
+            <span class="tag think">Think</span>
+            <h3>A subscriber buys a package</h3>
+            <p><code>pkg_def</code> is the commercial product: the term, and whether time is counted in days, weeks, months, or years. The offering on that package says pay-as-you-go or contract. That flag chooses the weekly formula later. It does not choose the split.</p>
+            <p>This one is <code>TA_TADS450G_W04</code>. The package prefix <code>TA_</code> is The Australian. The product codes it pays will start with <code>AU</code>, not <code>TA</code>.</p>
+          </article>
+          <div class="join">Joined by the latest effective date on the package</div>
+        </li>
+        <li>
+          <article class="station">
+            <span class="tag nca">NCA</span>
+            <h3>The package carries one current recipe</h3>
+            <p><code>news_pkg_def_allocation</code> points a package at an allocation id, dated with <code>effdt</code>. The extract keeps only the latest date. Many packages share one id. 10,283 packages have a recipe. 735 do not, including registration, staff access, trials, and free passes.</p>
+            <p>This package’s current row is allocation <strong>2370</strong>, status Active, effective <strong>1 July 2025</strong>. The header is <code>news_allocation</code>. The lines are <code>news_allocation_detail</code>. They add to 100%.</p>
+            <div class="split-bar" role="img" aria-label="Allocation 2370 is 68.965517 percent AUCD and 31.034483 percent AUCW">
+              <span class="digital"></span>
+              <span class="print"></span>
+            </div>
+            <p class="split-caption">Navy is AUCD, 68.965517%. Green is AUCW, 31.034483%.</p>
+            <p>Stored exactly as 68.965517% and 31.034483%. Of every 100 ex-GST, that is the share assigned to each code. The finance sheet’s Australian weekend column is 69% digital and 31% print. Close to this recipe, and not the number the recipe uses.</p>
+          </article>
+          <div class="join">Joined by the 4-character code</div>
+        </li>
+        <li>
+          <article class="station">
+            <span class="tag nca">NCA</span>
+            <h3>The code list says what those letters are</h3>
+            <p><code>news_allocate_to</code> is the dictionary. The letters name the bucket. They do not calculate the percent. Two packages can both use <code>CB</code> / <code>CS</code> at different rates.</p>
+            <div class="chips">
+              <span class="chip">AUCD <em>The Australian, pay-as-you-go, bundle digital, weekend</em></span>
+              <span class="chip">AUCW <em>The Australian, pay-as-you-go, bundle print, weekend</em></span>
+            </div>
+            <p>Characters 1–2 are the brand. <code>AU</code> is The Australian, which the finance sheet and the package code call <code>TA</code>. Characters 3–4 are the product. <code>C</code> is a pay-as-you-go bundle. <code>D</code> is the digital weekend side. <code>W</code> is the print weekend side.</p>
+          </article>
+          <div class="join">The percent is applied here. That program is not in the weekly script.</div>
+        </li>
+        <li>
+          <article class="station">
+            <span class="tag nca">NCA</span>
+            <h3>Cash is stored already split</h3>
+            <p>By the time a payment sits on <code>news_financial_transaction</code>, it has a product code, a gross amount, and a GST amount. One order line can carry several codes. For this package that is a line on <code>AUCD</code> and a line on <code>AUCW</code>.</p>
+            <p>The eight weekly procedures do not read <code>allocation_pct</code>. The split has already become two cash amounts. Which program writes those amounts is the missing join.</p>
+          </article>
+          <div class="join">Each code is earned from its own cash</div>
+        </li>
+        <li>
+          <article class="station">
+            <span class="tag payg">Weekly job</span>
+            <h3>Once a week, earn each code on its own</h3>
+            <p>The offering decides the formula. No <code>contract_offer</code> means pay-as-you-go: positive ex-GST cash, spread evenly from the subscription start through the expire date, rounded. A contract earns each positive instalment from its due date. Either way the result is earned-to-date, then cut down if it exceeds net cash, then reduced by what earlier weeks already posted. That remainder is this week.</p>
+            <p><code>AUCD</code> and <code>AUCW</code> are earned separately. A refund on one code does not move the other. The print/digital percent is not revisited.</p>
+            <p>The eight procedures are this station only. The order, the two chains, and a worked week are on the <a href="algorithm.html">algorithm page</a>.</p>
+          </article>
+          <div class="join">Sum every subscriber into one integer per code</div>
+        </li>
+        <li>
+          <article class="station">
+            <span class="tag nca">File</span>
+            <h3>The subscriber disappears</h3>
+            <p>The file has one row per product code for one earned date: the date, the 4-character code, and an integer. <code>AUCD</code> on this package is added to <code>AUCD</code> on every other package. There is no subscriber, no package, and no percent in the file.</p>
+            <p>The sample file is Sunday 25 October 2026, written Monday 26 October 2026 at 06:00. The writer is not one of the eight procedures. The worklist cleanup, which drops a subscription once earned catches cash, does not change these integers.</p>
+          </article>
+          <div class="join">The code is mapped onto the account. That crosswalk is not in these sources.</div>
+        </li>
+        <li>
+          <article class="station">
+            <span class="tag jde">JDE</span>
+            <h3>JDE receives the code, not the package</h3>
+            <p>The 4-character code is mapped to a five-segment account: Entity, Publication, Department, Object account, Subsidiary. The first three are the business unit. Publication is where the masthead, and print versus digital, are distinguished. So <code>AUCD</code> and <code>AUCW</code> are expected to land on different publication segments: The Australian digital, and The Australian print.</p>
+            <p>The table that turns <code>AUCD</code> into those five segments was not in the procedures, the allocation workbook, or the Think data model. The segments themselves are on the <a href="er-diagram.html">data-model page</a>.</p>
+          </article>
+        </li>
+      </ol>
+
+      <h2>What is glued, and what is only next to it</h2>
+      <table>
+        <thead><tr><th>Piece</th><th>Where it attaches</th><th>Read by the weekly procedures?</th></tr></thead>
+        <tbody>
+          <tr><td>Package and offering</td><td>The subscription line</td><td>Yes. The offering chooses pay-as-you-go or contract.</td></tr>
+          <tr><td>Allocation recipe and percents</td><td>The package, at the latest effective date</td><td>No. Named once, in a comment.</td></tr>
+          <tr><td>Code dictionary</td><td>The 4-character code</td><td>No.</td></tr>
+          <tr><td>Cash</td><td>Order line plus product code</td><td>Yes. This is the input.</td></tr>
+          <tr><td>Earlier earned amounts</td><td>Order line, product code, earned date</td><td>Yes. Subtracted to leave this week.</td></tr>
+          <tr><td>Finance percentage sheet</td><td>Policy beside the recipe</td><td>No. The recipe holds its own decimals.</td></tr>
+          <tr><td>JDE account string</td><td>After the file, via a crosswalk we do not have</td><td>No.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Three different clocks</h2>
+      <div class="grid">
+        <article class="station">
+          <h3>Recipe date</h3>
+          <p>The allocation’s effective date. This package’s is 1 July 2025. The extract does not keep the recipe it replaced, so an older week cannot be rebuilt from this file alone.</p>
+        </article>
+        <article class="station">
+          <h3>Cash date</h3>
+          <p>When the payment was taken. The weekly job looks back to a long-standing start (the script’s commented value is 30 June 2014), not only to last week.</p>
+        </article>
+        <article class="station">
+          <h3>Earned date</h3>
+          <p>The Sunday being closed. “Last week” is earned-to-date minus the amounts already stored on earlier earned dates.</p>
+        </article>
+      </div>
+
+      <footer>
+        <p>Sources: Think procedures dated 26 Oct 2026; allocation workbook (package link and code notes); <code>news_allocation_detail</code> extract; sample file shape only, not its amounts; finance bundle-split sheet; JDE account-string diagram. The 100-ex-GST remark is arithmetic on the stored percents.</p>
+      </footer>
+    </div>
+  </main>
+</body>
+</html>
