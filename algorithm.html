@@ -63,19 +63,19 @@ flowchart TD
           <p class="outside">Before this script: insert this earned date's rows into <code>news_earned_revenue</code>. That procedure is not in the file. The names start at 2b.</p>
           <ol class="chain">
             <li>
-              <span class="pname">1. news_earned_revenue_2b_update</span>
+              <span class="pname"><a href="#proc-2b">1. news_earned_revenue_2b_update</a></span>
               Set <code>earned_amount</code> to earned-to-date: positive ex-GST cash spread evenly from the subscription start date through the expire date.
             </li>
             <li>
-              <span class="pname">2. news_earned_revenue_3_update</span>
+              <span class="pname"><a href="#proc-3">2. news_earned_revenue_3_update</a></span>
               If that amount is above net cash, including refunds, cut it down to net cash.
             </li>
             <li>
-              <span class="pname">3. news_earned_revenue_4_update</span>
+              <span class="pname"><a href="#proc-4">3. news_earned_revenue_4_update</a></span>
               Replace the amount with this run's movement: earned-to-date minus everything posted on earlier earned dates. A refund can make this negative.
             </li>
             <li>
-              <span class="pname">4. news_currently_earning_5_delete</span>
+              <span class="pname"><a href="#proc-5">4. news_currently_earning_5_delete</a></span>
               Remove the worklist row when lifetime earned equals net cash since the historical start date.
             </li>
           </ol>
@@ -85,19 +85,19 @@ flowchart TD
           <p class="outside">Same missing insert. Contract rows are the ones whose offering has <code>contract_offer</code> set and status Active.</p>
           <ol class="chain">
             <li>
-              <span class="pname">1. news_earned_revenue_2c_update</span>
+              <span class="pname"><a href="#proc-2c">1. news_earned_revenue_2c_update</a></span>
               Set <code>earned_amount</code> to earned-to-date: each positive payment earned from its instalment due date, summed, then rounded.
             </li>
             <li>
-              <span class="pname">2. news_earned_revenue_3c_update</span>
+              <span class="pname"><a href="#proc-3c">2. news_earned_revenue_3c_update</a></span>
               Cap at net cash on the current product code and, via the mapping, the previous product code.
             </li>
             <li>
-              <span class="pname">3. news_earned_revenue_4c_update</span>
+              <span class="pname"><a href="#proc-4c">3. news_earned_revenue_4c_update</a></span>
               Movement since earlier earned dates, including amounts posted on the previous product code. If the result is negative, store 0.
             </li>
             <li>
-              <span class="pname">4. news_currently_earning_5c_delete</span>
+              <span class="pname"><a href="#proc-5c">4. news_currently_earning_5c_delete</a></span>
               Remove the order item from the worklist when total earned, all product codes, equals total net cash.
             </li>
           </ol>
@@ -110,67 +110,125 @@ flowchart TD
         <code>2b</code> and <code>2c</code> may run together. So may <code>3</code> and <code>3c</code>, <code>4</code> and <code>4c</code>, and <code>5</code> and <code>5c</code>. <code>3</code> must wait for <code>2b</code>. <code>4</code> must wait for <code>3</code>. <code>5</code> must wait for <code>4</code>. The contract chain is the same: <code>2c</code>, then <code>3c</code>, then <code>4c</code>, then <code>5c</code>. Running the file from top to bottom (2b, 2c, 3, 3c, 4, 4c, 5, 5c) satisfies both chains.
       </div>
 
-      <h2>What each procedure does</h2>
-      <table class="procs">
-        <thead>
-          <tr><th>Order</th><th>Procedure</th><th>Population</th><th>What it does to the data</th></tr>
-        </thead>
+      <h2>Each procedure, step by step</h2>
+      <p>Every procedure below writes one number, or deletes a worklist row. It does not create the subscriber and it does not split print from digital. The numbers in the examples are made up so the arithmetic can be checked. They are not a live subscriber.</p>
+      <p>Two dates are handed in. The <strong>earned date</strong> is the day being closed, such as Sunday 25 October 2026. The <strong>historical start</strong> is the commented value 30 June 2014. Payments timestamped on that start date are left out of the earning steps. Payments on the earned date are included.</p>
+
+      <h3 id="proc-2b"><span class="tag payg">PAYG</span> 1. Spread the cash — <code>news_earned_revenue_2b_update</code></h3>
+      <p>Asks for the earned date and the historical start. Overwrites today’s earned-to-date for pay-as-you-go.</p>
+      <p>A row is included only when all of these are true:</p>
+      <ul>
+        <li>The offering has no contract, and the offering is Active.</li>
+        <li>The subscription start date is on or before the earned date.</li>
+        <li>This product code has at least one payment whose gross amount is positive, timestamped after the historical start and on or before the earned date.</li>
+      </ul>
+      <ol class="flow">
+        <li>Add up ex-GST on those positive payments only. A refund has a negative or zero gross amount, so it is ignored here.</li>
+        <li>Days so far = earned date − subscription start + 1. Both ends count.</li>
+        <li>Days in the term = expire date − subscription start + 1.</li>
+        <li>Earned to date = round(positive ex-GST × days so far ÷ days in the term). If that cannot be calculated, write 0.</li>
+        <li>Store that number on today’s row for this order line and this product code. Whatever was there before is replaced.</li>
+      </ol>
+      <div class="formula">round( positive ex-GST × days so far ÷ days in the term )</div>
+      <p>Term 1 October through 7 October. That is 7 days. Positive cash is 100. On 3 October, days so far are 3. Round(100 × 3/7) = 43. Today’s row becomes 43.</p>
+      <p>After the expire date the fraction can go above 100%. The next procedure pulls it back.</p>
+
+      <h3 id="proc-3"><span class="tag payg">PAYG</span> 2. Do not earn more than the cash — <code>news_earned_revenue_3_update</code></h3>
+      <p>Same two dates. This is the step that sees refunds.</p>
+      <ol class="flow">
+        <li>For the same order line and product code, add ex-GST of every payment in the window, refunds included. This net can be lower than the positive cash used in step 1.</li>
+        <li>Compare today’s earned-to-date with that net.</li>
+        <li>If earned-to-date is already less than or equal to the net, leave it alone.</li>
+        <li>If earned-to-date is higher, replace it with the net.</li>
+      </ol>
+      <p>Continue the example. Earned-to-date is 43 and net cash is still 100. 43 is not higher, so the row stays 43.</p>
+      <p>Now suppose 30 has been refunded. Net cash is 70. If the straight-line has reached 100, this procedure cuts the row from 100 down to 70. It never raises a number.</p>
+
+      <h3 id="proc-4"><span class="tag payg">PAYG</span> 3. Keep only this week — <code>news_earned_revenue_4_update</code></h3>
+      <p>Asks for the earned date only. This is the number that belongs in the weekly file.</p>
+      <ol class="flow">
+        <li>Start from the number now sitting on today’s row. That is the capped earned-to-date from the previous two procedures.</li>
+        <li>Add up <code>earned_amount</code> on every earlier earned date for the same order line and the same product code.</li>
+        <li>Today’s row becomes: capped earned-to-date − that earlier total.</li>
+      </ol>
+      <div class="formula">this week = earned to date − sum of earlier earned dates</div>
+      <p>First week of the example: 43 − 0 = 43. The file would carry 43 for this product code, added together with every other subscriber on that code.</p>
+      <p>Next run, on 7 October, step 1 writes round(100 × 7/7) = 100, the cap leaves 100, and this procedure writes 100 − 43 = 57.</p>
+      <p>A refund can make the result negative. If earlier weeks already posted 90 and the cap has cut earned-to-date to 70, this week is 70 − 90 = −20. Pay-as-you-go stores the −20. That is a reversal.</p>
+      <div class="note warn">
+        <strong>Run this once for the earned date.</strong>
+        It subtracts history from the value it then overwrites. A second run would subtract the history again. To repeat it safely, run the spread, then the cap, then this step.
+      </div>
+
+      <h3 id="proc-5"><span class="tag payg">PAYG</span> 4. Drop a finished code from the worklist — <code>news_currently_earning_5_delete</code></h3>
+      <p>Asks for the historical start only. It does not change the amount that goes to the file.</p>
+      <ol class="flow">
+        <li>Add up every earned amount ever stored for this order line and this product code. All earned dates, not only this week.</li>
+        <li>Add up net ex-GST cash for that same code, where the payment timestamp is on or after the historical start.</li>
+        <li>If those two totals are equal, delete the worklist row.</li>
+        <li>If they differ, leave the worklist row. The subscription is still being earned.</li>
+      </ol>
+      <p>In the example, after the term, earned amounts add up to 100 and net cash is 100. The worklist row for that product code is removed. After the 30 refund, earned-to-date was cut to 70. The worklist row stays until the posted total also equals 70.</p>
+      <p>One difference from the earning steps: a payment timestamped on the historical start date is counted here, and it was excluded from the spread and the cap.</p>
+
+      <h3 id="proc-2c"><span class="tag contract">Contract</span> 1. Earn each instalment from its due date — <code>news_earned_revenue_2c_update</code></h3>
+      <p>Asks for the earned date and the historical start. Overwrites today’s earned-to-date for contracts.</p>
+      <p>A row is included only when the offering is an Active contract, and this product code has at least one positive payment in the window. If this row is an old product code, and the new code already has a positive payment, the old row is skipped so the same cash is not earned twice.</p>
+      <ol class="flow">
+        <li>Take each positive payment on this product code. If this row is the new code, also take positive payments still sitting on the previous code.</li>
+        <li>Find the due date. Use the instalment with the same payment sequence. If that is missing, use the latest instalment that has any payment. If that is also missing, use the subscription start date.</li>
+        <li>Days earned = earned date − due date + 1. If that is negative, the instalment is still in the future and contributes 0.</li>
+        <li>If days earned have reached the instalment length, the whole ex-GST payment is earned. Otherwise it contributes payment × days earned ÷ instalment length.</li>
+        <li>Add every instalment, then round once. Store that on today’s row.</li>
+      </ol>
+      <p>How long an instalment is:</p>
+      <table>
+        <thead><tr><th>Package</th><th>Length used for each payment</th></tr></thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>news_earned_revenue_2b_update<br>(@EarnedDate, @EarningStartDate)</td>
-            <td>PAYG</td>
-            <td>Overwrites <code>earned_amount</code> with the straight-line earned-to-date. Uses only payments where gross amount is positive. Ignores order items that have not started.</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>news_earned_revenue_2c_update<br>(@EarnedDate, @EarningStartDate)</td>
-            <td>Contract</td>
-            <td>Overwrites <code>earned_amount</code> with the instalment earned-to-date. Pulls in the previous product code when a mapping exists, and skips the old code if the new code already has a payment.</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>news_earned_revenue_3_update<br>(@EarnedDate, @EarningStartDate)</td>
-            <td>PAYG</td>
-            <td>Caps <code>earned_amount</code> at the sum of ex-GST cash in the window, refunds included. Updates a row only when earned-to-date is greater than that sum.</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>news_earned_revenue_3c_update<br>(@EarnedDate, @EarningStartDate)</td>
-            <td>Contract</td>
-            <td>Same cap, adding cash on the previous product code to cash on the current code.</td>
-          </tr>
-          <tr>
-            <td>5</td>
-            <td>news_earned_revenue_4_update<br>(@EarnedDate)</td>
-            <td>PAYG</td>
-            <td>Sets <code>earned_amount</code> to itself minus the sum of <code>earned_amount</code> on earlier earned dates. This is the figure that belongs in the weekly file. It can be negative.</td>
-          </tr>
-          <tr>
-            <td>6</td>
-            <td>news_earned_revenue_4c_update<br>(@EarnedDate)</td>
-            <td>Contract</td>
-            <td>Same subtraction, and it also subtracts earlier amounts on the previous product code. A negative result is stored as 0.</td>
-          </tr>
-          <tr>
-            <td>7</td>
-            <td>news_currently_earning_5_delete<br>(@EarningStartDate)</td>
-            <td>PAYG</td>
-            <td>Deletes a <code>news_currently_earning</code> row when the sum of all its earned amounts equals net cash with <code>updated</code> on or after the historical start date.</td>
-          </tr>
-          <tr>
-            <td>8</td>
-            <td>news_currently_earning_5c_delete<br>(no parameters)</td>
-            <td>Contract</td>
-            <td>Deletes every worklist row for an order item when total earned across all product codes equals total net cash, with no date filter on the cash.</td>
-          </tr>
+          <tr><td>Measured in months</td><td>The number of days in the month of the due date: 28, 29, 30, or 31.</td></tr>
+          <tr><td>A year billed in 12 instalments</td><td>The same month length, the days in the due date’s month.</td></tr>
+          <tr><td>Measured in days</td><td>The package length in days, divided by the number of instalments, then rounded.</td></tr>
+          <tr><td>Measured in weeks</td><td>Seven times the number of weeks, divided by the number of instalments, then rounded.</td></tr>
+          <tr><td>Other yearly lengths</td><td>Days from the day the job runs until the same date that many years later, divided by the number of instalments, then rounded. It uses today’s date, not the subscriber’s own year.</td></tr>
         </tbody>
       </table>
+      <p>One instalment of 31 is due on 1 October, and October has 31 days. On 1 October, days earned are 1, so the fraction is 1/31 and the rounded result is 1. On 15 October the fraction is 15/31, which is 15 before rounding. On 31 October the whole 31 is earned. On 30 September the due date is still ahead, so this instalment contributes 0.</p>
+      <p>Two instalments are added before the round. If one has earned 15.4 and another has earned 10.4, the job rounds 25.8 once, to 26. It does not round each instalment and then add.</p>
 
+      <h3 id="proc-3c"><span class="tag contract">Contract</span> 2. Do not earn more than the cash — <code>news_earned_revenue_3c_update</code></h3>
+      <p>Same idea as the pay-as-you-go cap. The ceiling is wider when the product code has changed.</p>
+      <ol class="flow">
+        <li>Add net ex-GST in the window for this product code, refunds included.</li>
+        <li>If this row is the new code, add the net cash still on the previous code as well.</li>
+        <li>If today’s earned-to-date is above that combined net, replace it with the combined net.</li>
+        <li>If it is not above the net, leave it.</li>
+      </ol>
+      <p>The 1 October example has earned-to-date of 1 and cash of 31. The cap does nothing. If a refund later makes net cash 0 while earned-to-date is still 31, the row is cut to 0.</p>
+
+      <h3 id="proc-4c"><span class="tag contract">Contract</span> 3. Keep only this week — <code>news_earned_revenue_4c_update</code></h3>
+      <p>Asks for the earned date only. Same subtraction as pay-as-you-go, with two contract rules.</p>
+      <ol class="flow">
+        <li>Start from today’s capped earned-to-date.</li>
+        <li>Subtract earned amounts already stored on earlier dates for this product code.</li>
+        <li>Also subtract earlier amounts stored on the previous product code, when this row is the new code.</li>
+        <li>If the result is negative, store 0. A pay-as-you-go row would have kept the negative.</li>
+      </ol>
+      <p>On 1 October the row is 1 − 0 = 1. On 31 October, earned-to-date is 31 and the earlier date holds 1, so this week is 30.</p>
+      <p>If those 31 were already posted and a refund then caps earned-to-date at 0, the subtraction is 0 − 31 = −31. The procedure stores 0. The reversal does not go to the file.</p>
       <div class="note warn">
-        <strong>Run <code>4</code> and <code>4c</code> only once per earned date.</strong>
-        Each one reads the amount it is about to overwrite. A second run subtracts history again. A safe repeat of a chain is the earned-to-date step, then the cap, then the movement step.
+        <strong>Run this once for the earned date.</strong>
+        A second run subtracts the earlier dates again. Repeat the instalment step, then the cap, then this step.
       </div>
+
+      <h3 id="proc-5c"><span class="tag contract">Contract</span> 4. Drop a finished order line from the worklist — <code>news_currently_earning_5c_delete</code></h3>
+      <p>Takes no dates. The comment says expired or cancelled. The test is whether the money has caught up.</p>
+      <ol class="flow">
+        <li>Add up earned amounts for the whole order line, across every product code and every earned date.</li>
+        <li>Add up net ex-GST cash for that order line, again across every product code. There is no historical-start cutoff.</li>
+        <li>If the two totals are equal, delete every worklist row for that order line.</li>
+        <li>If they differ, leave the worklist rows.</li>
+      </ol>
+      <p>Unlike pay-as-you-go, one product code catching up is not enough. All of the codes on the order line are compared together. This delete does not change the weekly amount.</p>
 
       <h2>Two kinds of subscription</h2>
       <p>The split is on the offering, not on a flag in the calculation itself.</p>
@@ -190,8 +248,8 @@ flowchart TD
       </div>
       <p>Only Active offerings are included. A subscription whose package is no longer Active is skipped by these updates.</p>
 
-      <h2>PAYG — spread cash across the term</h2>
-      <p>Take the positive payments only (refunds wait for the cap). Spread that ex-GST total evenly from the subscription start date through the expire date. Both ends count as a day.</p>
+      <h2>PAYG — the same example across a week</h2>
+      <p>Procedures <a href="#proc-2b">2b</a>, <a href="#proc-3">3</a>, and <a href="#proc-4">4</a> in one table. Positive payments only go into the spread. Refunds wait for the cap. Both ends of the term count as a day.</p>
       <div class="formula">earned to date = round( positive ex-GST cash × days so far ÷ days in the term )</div>
       <p>Days so far = earned date − start date + 1. Days in the term = expire date − start date + 1. After the expire date the fraction can go above 100%. The cap then pulls it back to the cash collected.</p>
 
@@ -212,8 +270,8 @@ flowchart TD
       <h3>A refund</h3>
       <p>Suppose 100 was paid and 30 was refunded. Net cash is 70. At the end of the term the straight-line of the original 100 is still 100, and the cap cuts earned-to-date to 70. If earlier weeks already posted 90, this week posts 70 − 90 = −20. PAYG is allowed to post that negative. That is a reversal.</p>
 
-      <h2>Contract — earn each instalment from its due date</h2>
-      <p>Each positive payment is earned on its own, starting on the instalment due date.</p>
+      <h2>Contract — the same rules in one place</h2>
+      <p>This is procedure <a href="#proc-2c">2c</a> again, without the surrounding steps. Each positive payment is earned on its own, starting on the instalment due date.</p>
       <div class="formula">days earned = earned date − due date + 1</div>
       <ul>
         <li>If the due date is still in the future, this instalment contributes 0.</li>
@@ -224,15 +282,7 @@ flowchart TD
       <p>The due date comes from the contract instalment tied to that payment. If that row is missing, the job uses the latest instalment that has any payment. If that is also missing, it uses the subscription start date.</p>
 
       <h3>How long is an instalment?</h3>
-      <p>The package calendar unit comes from Think: 0 = days, 1 = weeks, 2 = months, 3 = years.</p>
-      <table>
-        <thead><tr><th>Package</th><th>Instalment length used</th></tr></thead>
-        <tbody>
-          <tr><td>Monthly, or a year billed in 12 instalments</td><td>Number of days in the month of the due date (28, 29, 30, or 31).</td></tr>
-          <tr><td>Days or weeks</td><td>Package length in days, divided by the number of instalments.</td></tr>
-          <tr><td>Other month or year lengths</td><td>Length measured from the day the job runs, divided by the number of instalments. It uses today's date, not the subscriber's own month.</td></tr>
-        </tbody>
-      </table>
+      <p>The package calendar unit comes from Think: 0 = days, 1 = weeks, 2 = months, 3 = years. The length actually used on each payment is the one in procedure <a href="#proc-2c">2c</a>. A package measured in months always uses the days in the due date’s month, even when the package covers more than one month.</p>
 
       <h3>Illustration</h3>
       <p>An instalment of 31 ex-GST is due on 1 October, and October has 31 days. On 1 October, one day is earned: round(31 × 1/31) = 1, if it were the only instalment. On 31 October the whole 31 is earned. On 30 September nothing from this instalment is earned yet.</p>
