@@ -42,7 +42,7 @@ flowchart TD
   c4["5c Drop the order item\nwhen all codes have caught the cash"]
   file["Sum this earned date by product code\nwrite the file"]
 
-  prior -->|2b and 2c only update that row| split
+  prior -->|2b / 2c update the amount| split
   split -->|No| p1
   split -->|Yes| c1
   p1 --> p2 --> p3 --> p4 --> file
