@@ -30,7 +30,7 @@
       <p>Pay-as-you-go and contract split at the offering, then do the same three things: earned-to-date, a cash cap, then only the new movement. The print/digital split is not a box in this picture. The same stage of each chain may run together. Down a chain, the order is fixed.</p>
       <pre class="mermaid">
 flowchart TD
-  rows["Rows for this earned date already exist"]
+  prior["Step before this script\nInsert one row per order item and product code\ninto news_earned_revenue for this earned date"]
   split{"contract_offer set?"}
   p1["2b Straight line\npositive ex-GST cash times days over the term\nround to an integer"]
   c1["2c From the due date\neach positive instalment\nsum, then round once"]
@@ -42,13 +42,16 @@ flowchart TD
   c4["5c Drop the order item\nwhen all codes have caught the cash"]
   file["Sum this earned date by product code\nwrite the file"]
 
-  rows --> split
+  prior -->|2b and 2c only update that row| split
   split -->|No| p1
   split -->|Yes| c1
   p1 --> p2 --> p3 --> p4 --> file
   c1 --> c2 --> c3 --> c4 --> file
+
+  classDef outside fill:#f6f1e6,stroke:#8a7340,color:#2c2416
+  class prior outside
       </pre>
-      <p class="outside">The insert of those earned-date rows, and the file writer, are not among the eight procedures. Steps 5 and 5c do not change the amount that goes to the file.</p>
+      <p class="outside">The tinted box is that insert. It is not one of the eight procedures, which is why their names start at 2b. The file writer is not in the script either. Steps 5 and 5c do not change the amount that goes to the file.</p>
 
       <div class="note info">
         <strong>Money is ex-GST, and stored as a whole number.</strong>
